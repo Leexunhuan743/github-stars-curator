@@ -1,0 +1,5 @@
+interface:
+  display_name: "GitHub Stars Curator"
+  short_description: "Curate GitHub starred repos into smart lists"
+  brand_color: "#24292F"
+  default_prompt: "Use $github-stars-curator to review my GitHub stars, fetch READMEs, refine the taxonomy, run an offline plan, and sync approved repos into the right lists."

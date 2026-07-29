@@ -1,0 +1,49 @@
+version: 1
+maxLists: 32
+lists:
+  - name: downloaders
+    description: Download managers, media downloaders, torrent clients, stream grabbers, and automated download tools.
+  - name: cloud-drive-transfer-sync
+    description: Cloud drives, WebDAV and storage browsers, file transfer, device sending, remote copy, and folder sync tools.
+  - name: clipboard-tools
+    description: Clipboard managers, clipboard history, pasteboard tools, cross-device copy/paste, and clipboard synchronization utilities.
+  - name: music-players
+    description: Music players, streaming music clients, lyric-focused players, and music listening apps.
+  - name: image-viewers
+    description: Image viewers, photo browsers, comic/image browsing apps, gallery clients, and image preview tools.
+  - name: video-players
+    description: Video players, streaming video clients, danmu viewers, and watch-focused apps.
+  - name: agent-harnesses
+    description: Agent harnesses, coding runtimes, ADEs, and multi-agent workspaces.
+  - name: agent-skills-mcp
+    description: Agent skills, MCP servers, plugins, code intelligence, repo knowledge graphs, and AI content-generation tools.
+  - name: ai-agents
+    description: AI agents, agent platforms, autonomous workflows, and agent-oriented applications.
+  - name: dev-tools
+    description: Developer tools, editors, local engineering utilities, and coding workflow tools.
+  - name: terminal
+    description: Terminal apps, TUIs, CLI-first utilities, SSH clients, and remote shell tools.
+  - name: windows-tools
+    description: Windows utilities, shell extensions, Explorer integrations, keymaps, thumbnails, and system tools.
+  - name: desktop-apps
+    description: General user-facing desktop apps, clipboard managers, chat export and archive tools, native utilities, and everyday GUI software.
+  - name: reading-apps
+    description: RSS readers, desktop reading apps, document readers, and subscription-based reading workflows.
+  - name: pdf-document-tools
+    description: PDF and document readers, editors, converters, OCR/compression tools, document viewers, and document-to-Markdown or AI-prep utilities.
+  - name: note-software
+    description: Note-taking apps, markdown knowledge tools, PKM systems, scratchpads, and personal knowledge software.
+  - name: selfhosted-reading-bookmarks
+    description: Self-hosted reading libraries, read-later services, bookmark archives, and manga or ebook servers.
+  - name: references-guides
+    description: Reference collections, awesome lists, guides, tutorials, datasets, books, and learning resources.
+  - name: publishing-site-pipelines
+    description: Doc-to-site, book-generation, static publishing, content-to-website, and automated publication pipelines.
+  - name: self-hosted
+    description: Deployable self-hosted services, home-lab apps, private web tools, APIs, and personal server software.
+  - name: cloudflare-network-proxy
+    description: Cloudflare Workers, tunnels, reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients.
+  - name: general-software
+    description: Broad useful software that is understandable but not better captured by a stable specialized bucket.
+  - name: misc-explore
+    description: Temporary holding list for ambiguous, under-read, experimental, or still-learning repos that need later review.
