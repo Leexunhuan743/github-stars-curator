@@ -647,3 +647,166 @@ def test_inventory_owner_mismatch_is_rejected():
     apply_lists = load_module(APPLY_SCRIPT, "apply_lists_owner_test")
     with pytest.raises(ValueError, match="does not match authenticated viewer"):
         apply_lists.verify_inventory_owner("someone-else", "viewer")
+
+
+WRITE_CLASS_SCRIPT = SKILL_DIR / "scripts" / "write_classification.py"
+
+
+def test_write_classification_merges_meta_and_emits_ledger(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_merge_test")
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    meta_dir.joinpath("owner__repo.json").write_text(
+        json.dumps(
+            {
+                "nameWithOwner": "owner/repo",
+                "description": "A download manager",
+                "readmeStatus": "ok",
+                "fetchStatus": "ok",
+                "classificationStatus": None,
+            }
+        ),
+        encoding="utf-8",
+    )
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_wc_support_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    ledger_path = tmp_path / "ledger" / "incremental-ledger.json"
+
+    ledger = writer.apply_classifications(
+        [
+            {
+                "nameWithOwner": "owner/repo",
+                "finalLists": ["downloaders"],
+                "summary": "Multi-threaded download manager.",
+                "reason": "README describes queues and resume.",
+                "confidence": "high",
+            }
+        ],
+        meta_dir,
+        taxonomy,
+        ledger_path,
+        product_type="test-run",
+    )
+
+    assert len(ledger) == 1
+    assert ledger[0]["nameWithOwner"] == "owner/repo"
+    assert ledger[0]["finalLists"] == ["downloaders"]
+    assert ledger[0]["readmePath"] == "star-readmes/raw/owner__repo.md"
+    assert ledger[0]["description"] == "A download manager"
+    assert ledger[0]["productType"] == "test-run"
+    assert ledger[0]["primaryFunction"] == "downloaders"
+    assert ledger[0]["classificationStatus"] == "reviewed"
+    meta = json.loads(meta_dir.joinpath("owner__repo.json").read_text(encoding="utf-8"))
+    assert meta["summary"] == "Multi-threaded download manager."
+    assert meta["finalLists"] == ["downloaders"]
+    assert meta["reason"] == "README describes queues and resume."
+    assert meta["confidence"] == "high"
+    assert meta["description"] == "A download manager"
+    assert meta["readmeStatus"] == "ok"
+    assert meta["facets"] == []
+
+
+def test_write_classification_rejects_unknown_list(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_unknown_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_wc_unknown_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    with pytest.raises(ValueError, match="Unknown list names"):
+        writer.apply_classifications(
+            [{"nameWithOwner": "owner/repo", "finalLists": ["no-such-bucket"]}],
+            tmp_path / "meta",
+            taxonomy,
+            tmp_path / "ledger.json",
+        )
+
+
+def test_write_classification_requires_existing_meta(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_meta_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_wc_meta_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    with pytest.raises(ValueError, match="Run fetch_readmes.py first"):
+        writer.apply_classifications(
+            [{"nameWithOwner": "owner/repo", "finalLists": ["downloaders"]}],
+            tmp_path / "meta",
+            taxonomy,
+            tmp_path / "ledger.json",
+        )
+
+
+def test_write_classification_refuses_overwrite_of_different_ledger(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_overwrite_test")
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    meta_dir.joinpath("owner__repo.json").write_text(
+        json.dumps({"nameWithOwner": "owner/repo"}),
+        encoding="utf-8",
+    )
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_wc_overwrite_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    records = [{"nameWithOwner": "owner/repo", "finalLists": ["downloaders"]}]
+    ledger_path = tmp_path / "ledger.json"
+    writer.apply_classifications(records, meta_dir, taxonomy, ledger_path)
+    with pytest.raises(ValueError, match="already exists with different content"):
+        writer.apply_classifications(
+            [{"nameWithOwner": "owner/repo", "finalLists": ["terminal"]}],
+            meta_dir,
+            taxonomy,
+            ledger_path,
+        )
+    # identical re-run is allowed and stays idempotent
+    writer.apply_classifications(records, meta_dir, taxonomy, ledger_path)
+    assert len(json.loads(ledger_path.read_text(encoding="utf-8"))) == 1
+
+
+def test_write_classification_rejects_repo_missing_from_inventory(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_inventory_test")
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    meta_dir.joinpath("ghost__repo.json").write_text(
+        json.dumps({"nameWithOwner": "ghost/repo"}),
+        encoding="utf-8",
+    )
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_wc_inventory_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    with pytest.raises(ValueError, match="Refresh the inventory first"):
+        writer.apply_classifications(
+            [{"nameWithOwner": "ghost/repo", "finalLists": ["downloaders"]}],
+            meta_dir,
+            taxonomy,
+            tmp_path / "ledger.json",
+            inventory_names={"owner/repo"},
+        )
+
+
+def test_write_classification_main_writes_ledger_and_meta(tmp_path, monkeypatch):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_main_test")
+    meta_dir = tmp_path / "star-readmes" / "meta"
+    meta_dir.mkdir(parents=True)
+    meta_dir.joinpath("owner__repo.json").write_text(
+        json.dumps({"nameWithOwner": "owner/repo", "description": "D"}),
+        encoding="utf-8",
+    )
+    records = tmp_path / "records.json"
+    records.write_text(
+        json.dumps([{"nameWithOwner": "owner/repo", "finalLists": ["downloaders"]}]),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "write_classification.py",
+            "--classifications",
+            str(records),
+            "--out-dir",
+            str(tmp_path),
+            "--ledger-name",
+            "my-ledger",
+        ],
+    )
+    writer.main()
+    ledger = json.loads(
+        (tmp_path / "star-readmes" / "my-ledger.json").read_text(encoding="utf-8")
+    )
+    assert ledger[0]["nameWithOwner"] == "owner/repo"
+    assert ledger[0]["finalLists"] == ["downloaders"]
+    assert ledger[0]["productType"] == "agent-classified"

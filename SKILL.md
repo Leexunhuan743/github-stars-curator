@@ -117,6 +117,8 @@ For each repo, enrich or confirm:
 
 When the README and metadata disagree, prefer the README.
 
+Record the results with `scripts/write_classification.py` (see Scripts). It validates every list name against the workspace taxonomy, merges the classification fields into `star-readmes/meta/*.json` without touching upstream repo metadata, and emits a ledger file that `apply_user_lists.py` can consume directly. Treat the emitted ledger as the narrow incremental ledger for this run's repos.
+
 ### 4. Refine the taxonomy
 
 Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. Do not create a new list just because one repo is slightly different. New lists are justified only when:
@@ -220,6 +222,7 @@ Do not use the browser as the first choice when `gh` can do the job more reliabl
 
 - `scripts/fetch_star_inventory.py`: fetch stars and compute delta
 - `scripts/fetch_readmes.py`: pull README corpus and create per-repo metadata stubs
+- `scripts/write_classification.py`: merge agent classifications into meta files and emit a ledger; validates list names against the taxonomy and makes no GitHub calls
 - `scripts/audit_cloud_drift.py`: read live GitHub list memberships and report drift from a local ledger before writeback
 - `scripts/apply_user_lists.py`: plan and optionally apply GitHub user list changes
 

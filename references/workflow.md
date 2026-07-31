@@ -37,6 +37,10 @@ When the user asks for "new stars only" or "just process recent additions":
 
 Incremental README fetches merge into the existing corpus. They must not remove old entries from `manifest.json` or `readme-index.json`, and they must not erase already-filled classification fields. Keep README availability in `readmeStatus`/`fetchStatus` and human review progress in `classificationStatus`.
 
+Run `fetch_readmes.py --only-new-from` immediately after the inventory refresh: `fetch_star_inventory.py` regenerates `github-stars-delta.json` on every run, so a second inventory run before the README fetch overwrites the delta and leaves you with an empty `newStars` set.
+
+Record the new repos' classifications with `scripts/write_classification.py` and name the emitted ledger with a topic or date suffix (for example `incremental-20260801-ledger.json`) so it does not collide with the canonical record; pass that file as `--mapping` for the plan and apply steps.
+
 ## Cloud drift audit and reconciliation mode
 
 Use this mode before every online writeback. Do not rely on the user to remember whether they changed GitHub Stars lists manually in the GitHub UI, browser, mobile app, or another client after the local ledger was last synced.
@@ -54,6 +58,8 @@ Recommended order:
 5. For every repo in a narrow incremental ledger, include its current live managed lists plus the new desired lists in `finalLists`.
 6. Run offline plan, then online plan, and inspect every `listsToRemove`.
 7. Treat removals as intentional only when they match the current request or an explicitly reviewed reconciliation decision.
+
+When every drift entry is `localNotLive` with an empty `liveNotLocal` — the typical shape of a run that only classifies newly starred repos — that is the expected pre-sync state, not a stop signal: the online plan will show the new assignments with no `listsToRemove`, and apply is safe after plan review.
 
 Do not apply an old full ledger without a fresh drift audit. Because GitHub's membership mutation replaces the managed-list set for each target repo, a stale full ledger can silently undo manual additions, removals, or reclassifications.
 
