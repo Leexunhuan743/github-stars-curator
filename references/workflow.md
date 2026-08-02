@@ -71,7 +71,7 @@ If the user intentionally removed a repo from all managed taxonomy lists, do not
 Recommended command:
 
 ```bash
-python scripts/audit_cloud_drift.py --mapping "<workspace>/star-readmes/complete-23bucket-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --all-inventory
+python scripts/audit_cloud_drift.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --all-inventory
 ```
 
 The command exits zero when there is no drift and non-zero when drift is found. A non-zero drift result is not a script failure; it is a stop-and-reconcile signal before any apply.
@@ -83,7 +83,7 @@ The command exits zero when there is no drift and non-zero when drift is found. 
 - `star-readmes/raw/*.md`: README corpus
 - `star-readmes/meta/*.json`: per-repo metadata stubs and enrichments
 - `star-readmes/manifest.json`: corpus manifest
-- `star-readmes/complete-23bucket-ledger.json`: final mapping record
+- `star-readmes/complete-ledger.json`: final mapping record
 - `taxonomy.yaml`: optional workspace-owned taxonomy override
 - `github-stars-sync-plan.json`: reviewed plan with `planHash`
 - `github-stars-cloud-drift-report.json`: live-vs-ledger drift audit before writeback
