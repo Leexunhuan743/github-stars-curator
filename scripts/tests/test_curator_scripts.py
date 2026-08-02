@@ -930,3 +930,61 @@ def test_drift_audit_all_inventory_marks_absent_repos_as_empty():
     for name in {"owner/ledgered", "owner/unledgered"}:
         local.setdefault(name, set())
     assert local == {"owner/ledgered": {"downloaders"}, "owner/unledgered": set()}
+
+
+def test_list_state_fingerprint_is_order_independent():
+    # GitHub returns user lists in an unpublished order that changes with
+    # activity; nothing may depend on it.
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_order_fingerprint_test")
+    lists_a = [
+        {"id": "L1", "name": "downloaders", "description": "A"},
+        {"id": "L2", "name": "terminal", "description": "B"},
+        {"id": "L3", "name": "custom", "description": ""},
+    ]
+    lists_b = [lists_a[2], lists_a[0], lists_a[1]]
+    assert apply_lists.list_state_fingerprint(lists_a) == apply_lists.list_state_fingerprint(
+        lists_b
+    )
+
+
+def test_membership_cache_survives_cloud_list_reorder(tmp_path):
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_order_cache_test")
+    cache = tmp_path / "membership-cache.json"
+    lists_a = [
+        {"id": "L1", "name": "downloaders", "description": "A"},
+        {"id": "L2", "name": "terminal", "description": "B"},
+    ]
+    memberships = {
+        "owner/repo": [
+            {"id": "L1", "name": "downloaders", "description": "A"}
+        ]
+    }
+    apply_lists.write_membership_cache(cache, "viewer", lists_a, ["owner/repo"], memberships)
+    # the cloud returns the lists in a different order on the next run
+    reordered = [lists_a[1], lists_a[0]]
+    assert apply_lists.load_membership_cache(
+        cache, "viewer", reordered, ["owner/repo"]
+    ) == memberships
+
+
+def test_plan_is_identical_regardless_of_existing_list_order(tmp_path):
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_order_plan_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    existing = {
+        "downloaders": {"id": "L1", "name": "downloaders", "description": taxonomy["descriptions"]["downloaders"]},
+        "terminal": {"id": "L2", "name": "terminal", "description": taxonomy["descriptions"]["terminal"]},
+    }
+    memberships = {"owner/repo": [existing["downloaders"]]}
+    assignments = [{"nameWithOwner": "owner/repo", "finalLists": ["downloaders", "terminal"]}]
+    inventory = [{"id": "R1", "nameWithOwner": "owner/repo"}]
+    plan_a = apply_lists.build_plan(assignments, inventory, taxonomy, existing_by_name=existing, memberships=memberships)
+    # a different existing_by_name dict order (as delivered by a different
+    # cloud list order) must not change the plan
+    existing_reordered = {
+        "terminal": existing["terminal"],
+        "downloaders": existing["downloaders"],
+    }
+    plan_b = apply_lists.build_plan(assignments, inventory, taxonomy, existing_by_name=existing_reordered, memberships=memberships)
+    assert plan_a["repoUpdates"] == plan_b["repoUpdates"]
+    assert plan_a["desiredLists"] == plan_b["desiredLists"]
+    assert plan_a["missingLists"] == plan_b["missingLists"]
