@@ -1,6 +1,6 @@
 ---
 name: github-stars-curator
-description: Curate GitHub starred repositories into stable, meaningful user lists by detecting new stars, downloading READMEs into a local corpus, enriching per-repo metadata, refining taxonomy decisions, and syncing the final mapping back to GitHub via gh or a browser fallback. Use this when a user wants their starred repos reviewed, reorganized, incrementally maintained, or promoted into existing or newly created GitHub star lists.
+description: Curate GitHub starred repositories into stable, meaningful user lists by detecting new stars, downloading READMEs into a local corpus, enriching per-repo metadata, refining taxonomy decisions, and syncing the final mapping back to GitHub via gh or a browser fallback. Use this when a user wants their starred repos sorted into lists, a recent batch of new stars filed incrementally, or their star-list taxonomy reviewed and refined.
 ---
 
 # GitHub Stars Curator
@@ -11,13 +11,13 @@ This skill turns a pile of GitHub stars into a maintained catalog: local README 
 
 Prefer this skill when the user says things like:
 
-- "Sort my starred repos into lists."
-- "Check what I starred recently and file the new ones."
-- "Pull all starred repo READMEs locally, read them, and update the categories."
-- "Create or refine my GitHub star lists."
+- "Sort my starred repos into lists." — full curation pass
+- "Check what I starred recently and file the new ones." — incremental maintenance
+- "Pull all starred repo READMEs locally, read them, and update the categories." — taxonomy and list review
 
 Read references only when the task needs them:
 
+- Read `references/glossary.md` for the meaning of the skill's leading words: ledger, drift, planHash, writeback, narrow incremental ledger.
 - Read `references/workflow.md` for inventory refreshes, README fetching, local corpus maintenance, or end-to-end runs.
 - Read `references/taxonomy-rubric.md` when classifying repositories, refining buckets, or explaining list placement.
 - Read `references/github-graphql-notes.md` only before online plan/apply work or browser fallback.
@@ -79,6 +79,8 @@ If the user asked for incremental maintenance, focus first on the repos in `newS
 
 The inventory records `ownerLogin`. Inventories fetched with `--login` for another account are read-only for classification; online plan/apply refuses to use them against a different authenticated viewer.
 
+Done when the fetch totals match its printed counts and `github-stars-delta.json` names every repo added or removed since the previous snapshot.
+
 ### 2. Pull README files into a local corpus
 
 Run `scripts/fetch_readmes.py` against the inventory. This downloads the canonical GitHub README for each repo and writes a compact per-repo metadata stub.
@@ -96,6 +98,8 @@ python scripts/fetch_readmes.py --inventory "<workspace>/github-stars.json" --ou
 ```
 
 `readmeStatus` values can include `ok`, `missing`, `rate_limited`, `network_failed`, `api_failed`, `stale-but-retained`, or `unfetched`. `fetchStatus` records the direct outcome of the latest fetch attempt. Treat `missing` as a repo/content condition, treat `stale-but-retained` as an old local README whose refresh failed, and treat rate/network/API failures as retry or environment conditions.
+
+Done when every repo in scope has a `readmeStatus` — `ok`, or a documented failure with its reason — and `manifest.json` and `readme-index.json` cover it.
 
 ### 3. Read README content and enrich metadata
 
@@ -119,9 +123,11 @@ When the README and metadata disagree, prefer the README.
 
 Record the results with `scripts/write_classification.py` (see Scripts). It validates every list name against the workspace taxonomy, merges the classification fields into `star-readmes/meta/*.json` without touching upstream repo metadata, and emits a ledger file that `apply_user_lists.py` can consume directly. Treat the emitted ledger as the narrow incremental ledger for this run's repos.
 
+Done when every repo in scope has non-empty `finalLists`, `classificationStatus` set to `reviewed`, and `write_classification.py` reported zero unknown lists.
+
 ### 4. Refine the taxonomy
 
-Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. Do not create a new list just because one repo is slightly different. New lists are justified only when:
+Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
 
 - the bucket has a stable concept,
 - at least a few repos belong there now or obviously soon,
@@ -131,6 +137,8 @@ Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the ma
 If the taxonomy would exceed 32 lists, merge the lowest-value or most overlapping buckets before writeback.
 
 When a user's taxonomy should differ from the bundled template, copy `references/taxonomy-template.yaml` to `<workspace>/taxonomy.yaml` and edit the workspace copy. Avoid modifying the installed skill just to add a local custom list during ordinary curation.
+
+Done when the taxonomy stays at or under the 32-list cap and every list name the ledger uses resolves against the workspace taxonomy.
 
 ### 5. Produce a classification ledger
 
@@ -153,6 +161,8 @@ Maintain a JSON ledger that can be reviewed and diffed. A good record shape is:
 
 Also generate a human-readable taxonomy summary so the user can audit list intent quickly.
 
+Done when the ledger passes `apply_user_lists.py --offline-plan` with zero failed repos and the taxonomy summary reflects the current ledger.
+
 ### 6. Plan and sync the final mapping
 
 Run `scripts/apply_user_lists.py` in offline plan mode first. This validates the ledger against the managed taxonomy without contacting GitHub.
@@ -169,7 +179,7 @@ python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/classific
 
 Online plan writes `<workspace>/github-stars-membership-cache.json` after a live membership read. It uses live GitHub data by default on each run. Use `--use-membership-cache` only for a reviewed rerun when the cache viewer and list-state fingerprint still match; this avoids accidentally preserving stale list memberships.
 
-Before applying, do not jump from a local full ledger straight to writeback. Run an online plan or `scripts/audit_cloud_drift.py` to compare live memberships with the local ledger. If drift exists, decide whether to (a) merge the cloud edits back into the full ledger or (b) create a narrow incremental ledger containing only the repos you intend to change, with each target repo's current live lists included in `finalLists`.
+Before applying, run an online plan or `scripts/audit_cloud_drift.py` to compare live memberships with the local ledger. Live memberships win when they differ: reconcile via `references/workflow.md` (cloud drift audit and reconciliation mode), merging cloud edits back into the full ledger or writing a narrow incremental ledger that preserves each target repo's current live lists in `finalLists`.
 
 Then apply the reviewed plan:
 
@@ -185,6 +195,8 @@ Apply mode only mutates repositories whose managed list membership differs from 
 
 The reviewed `planHash` binds the mapping, inventory, taxonomy, repository node IDs, descriptions, and preservation mode. Apply writes its summary and journal first, then exits non-zero when any requested mutation remains incomplete.
 
+Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, and the writeback summary and journal were written.
+
 ### 7. Report the result cleanly
 
 Summarize:
@@ -197,10 +209,12 @@ Summarize:
 - any ambiguous repos left in a holding list,
 - any failures that need manual follow-up.
 
+Done when the report answers every bullet above, including an explicit "none" for empty ones.
+
 ## Classification Rules
 
 1. Prefer function over implementation language. A Rust clipboard tool still belongs in `desktop-apps` before it belongs in a generic Rust bucket.
-2. Use multiple lists when they improve retrieval, but keep them meaningful. Do not spray every repo across many adjacent buckets.
+2. Use multiple lists when they improve retrieval, but keep them meaningful: two lists earn their place only when both names serve a future search question.
 3. Favor stable user intent:
    - what the repo is for,
    - what workflow it supports,
@@ -216,8 +230,6 @@ If `gh` cannot perform the needed operation:
 2. Still keep the local inventory, README corpus, and ledger files as the working record.
 3. Make the same taxonomy decisions locally first, then mirror them in the GitHub UI.
 
-Do not use the browser as the first choice when `gh` can do the job more reliably.
-
 ## Scripts
 
 - `scripts/fetch_star_inventory.py`: fetch stars and compute delta
@@ -228,6 +240,7 @@ Do not use the browser as the first choice when `gh` can do the job more reliabl
 
 ## References
 
+- `references/glossary.md`: leading-word definitions (ledger, drift, planHash, writeback, narrow incremental ledger)
 - `references/workflow.md`: end-to-end operating procedure
 - `references/taxonomy-rubric.md`: starter taxonomy and list-creation heuristics
 - `references/taxonomy-template.yaml`: machine-readable starter taxonomy
