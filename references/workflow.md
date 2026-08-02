@@ -33,7 +33,7 @@ When the user asks for "new stars only" or "just process recent additions":
 2. Fetch READMEs only for `newStars`.
 3. Read and classify only the new corpus entries.
 4. Revisit the taxonomy only if the new repos expose a genuinely new recurring concept.
-5. Reapply the full ledger once the new repos are categorized.
+5. Merge the narrow ledger into the full ledger record with `write_classification.py --merge-into-full` once the new repos are categorized and synced.
 
 Incremental README fetches merge into the existing corpus. They must not remove old entries from `manifest.json` or `readme-index.json`, and they must not erase already-filled classification fields. Keep README availability in `readmeStatus`/`fetchStatus` and human review progress in `classificationStatus`.
 

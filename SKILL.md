@@ -25,9 +25,9 @@ Read references only when the task needs them:
 
 ## Taxonomy Scope
 
-The bundled taxonomy serves a personal-software + AI-tooling star set: desktop apps, media, notes and reading, download/transfer utilities, agent harnesses and skills, self-hosted services, and reference material. It is not a general-purpose GitHub taxonomy — a 500-repo probe of GitHub's top-starred repositories (5k-100k+ star bands, manually labeled) left ~38% of repos unclassifiable: web frameworks and UI libraries, programming languages and runtimes, data/ML infrastructure, cloud-native tooling, games and 3D, fonts and design assets, business apps, security/OSINT tooling, scrapers, blockchain, and chat platforms.
+The bundled 23-bucket taxonomy is a general-purpose classification: personal software (desktop apps, media, notes and reading, download/transfer utilities), AI and agent tooling, self-hosted services and network tooling, developer infrastructure (`frameworks-libraries`, `data-ml-tools`, `self-hosted`, `game-3d-creative`, `design-assets`, `business-apps`, `web-scraping-data-collection`, `security-pentest-tools`), reference material, and the `everything-else` fallback. A manually labeled 500-repo probe of GitHub's top-starred repositories covers ~98% of repos; the long tail (OS kernels, smart-home hubs, blockchain nodes, non-software repos) is legitimate `everything-else` material.
 
-For a star set dominated by developer infrastructure, the taxonomy already covers it: `frameworks-libraries`, `data-ml-tools`, `self-hosted` (cloud-native and chat), `game-3d-creative`, `design-assets`, `business-apps`, `web-scraping-data-collection`, and `security-pentest-tools` are part of the default 23-bucket template. Force no repo into `dev-tools` or `everything-else` just because no bucket seems to fit.
+Classify into the most specific bucket that fits; `everything-else` exists for repos that genuinely fit none.
 
 ## Preconditions
 
@@ -133,7 +133,7 @@ Done when every repo in scope has non-empty `finalLists`, `classificationStatus`
 
 ### 4. Refine the taxonomy
 
-Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. When the star set lies outside the bundled taxonomy's scope (developer infrastructure), pick from the extension candidate buckets in `references/taxonomy-rubric.md` rather than inventing ad hoc names. New lists are justified only when:
+Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
 
 - the bucket has a stable concept,
 - at least a few repos belong there now or obviously soon,
@@ -183,7 +183,7 @@ Then run online plan mode. This checks existing GitHub lists, stale descriptions
 python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/classification-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
 ```
 
-Online plan writes `<workspace>/github-stars-membership-cache.json` after a live membership read. It uses live GitHub data by default on each run. Use `--use-membership-cache` only for a reviewed rerun when the cache viewer and list-state fingerprint still match; this avoids accidentally preserving stale list memberships.
+Online plan reads live GitHub data and writes a membership cache; `--use-membership-cache` is only for a deliberately reviewed rerun (details in `references/workflow.md`, List sync safety).
 
 Before applying, run an online plan or `scripts/audit_cloud_drift.py` to compare live memberships with the local ledger. Live memberships win when they differ: reconcile via `references/workflow.md` (cloud drift audit and reconciliation mode), merging cloud edits back into the full ledger or writing a narrow incremental ledger that preserves each target repo's current live lists in `finalLists`.
 
@@ -193,15 +193,9 @@ Then apply the reviewed plan:
 python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/classification-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
 ```
 
-This script manages only the formal taxonomy lists from `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` by default. It preserves any existing GitHub lists that are not part of the managed taxonomy. Use `--replace-all-lists` only when the user explicitly wants the ledger to replace every list membership for each repo.
+Apply preserves existing GitHub lists outside the managed taxonomy by default and rejects unknown list names; `--replace-all-lists` and `--allow-unknown-lists` are deliberate opt-outs documented in `references/workflow.md` (List sync safety).
 
-Unknown list names are rejected by default. Update `<workspace>/taxonomy.yaml` first, then rerun the plan. Use `--allow-unknown-lists` only as a transition aid; it does not replace a real taxonomy entry.
-
-Apply mode only mutates repositories whose managed list membership differs from the reviewed plan. It writes `github-stars-writeback-journal.jsonl` before and after each mutation so partial failures can be audited.
-
-The reviewed `planHash` binds the mapping, inventory, taxonomy, repository node IDs, descriptions, and preservation mode. Apply writes its summary and journal first, then exits non-zero when any requested mutation remains incomplete.
-
-Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, and the writeback summary and journal were written.
+Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, the writeback summary and journal were written, and the narrow ledger was merged back into the full ledger record with `write_classification.py --merge-into-full`.
 
 ### 7. Report the result cleanly
 
