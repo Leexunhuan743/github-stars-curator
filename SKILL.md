@@ -136,7 +136,7 @@ Done when every repo in scope has non-empty `finalLists` and `classificationStat
 
 ### 4. Refine the taxonomy
 
-Before refining, check whether `<workspace>/taxonomy.yaml` exists: it overrides the bundled template for every script (`choose_taxonomy_path` picks it up automatically when present). If the user needs custom lists, create it from `references/taxonomy-template.yaml` and add the lists there — never in the bundled file. When it exists, compare its list names with the ledger's `finalLists` before planning and flag any mismatch.
+Before refining, check whether `<workspace>/taxonomy.yaml` exists: it overrides the bundled template for every script (`choose_taxonomy_path` picks it up automatically when present), so the ledger's list names must resolve against it — flag any mismatch. When the user needs custom lists, create the workspace copy from `references/taxonomy-template.yaml` and edit it there; the workspace file is the user's own template, never the bundled one.
 
 Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
 
@@ -147,9 +147,7 @@ Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the ma
 
 If the taxonomy would exceed 32 lists, merge the lowest-value or most overlapping buckets before writeback.
 
-When a user's taxonomy should differ from the bundled template, copy `references/taxonomy-template.yaml` to `<workspace>/taxonomy.yaml` and edit the workspace copy. Avoid modifying the installed skill just to add a local custom list during ordinary curation.
-
-When any bucket holds more than roughly one tenth of the total star count (floor 30) or clearly outgrows the rest — or `everything-else` crosses the same bar — run the bucket overload review before refining anything: analyze what the repos actually are, propose concrete splits, and ask the user which to adopt (see `references/workflow.md`, Bucket overload review). Adopted lists are recorded in `<workspace>/taxonomy.yaml`, the user's own template, never in the bundled one.
+When any bucket holds more than roughly one tenth of the total star count (floor 30) or clearly outgrows the rest — or `everything-else` crosses the same bar — run the bucket overload review before refining anything: analyze what the repos actually are, propose concrete splits, and ask the user which to adopt (see `references/workflow.md`, Bucket overload review). Adopted lists are recorded in `<workspace>/taxonomy.yaml`, the user's own template.
 
 Done when the taxonomy stays at or under the 32-list cap and every list name the ledger uses resolves against the workspace taxonomy.
 
@@ -230,7 +228,7 @@ If `gh` cannot perform the needed operation:
 
 ## References
 
-- `references/glossary.md`: leading-word definitions (ledger, drift, planHash, writeback, narrow incremental ledger)
+- `references/glossary.md`: leading-word definitions (ledger, drift, planHash, writeback, narrow incremental ledger, unmanaged list)
 - `references/workflow.md`: end-to-end operating procedure
 - `references/taxonomy-rubric.md`: starter taxonomy and list-creation heuristics
 - `references/taxonomy-template.yaml`: machine-readable starter taxonomy

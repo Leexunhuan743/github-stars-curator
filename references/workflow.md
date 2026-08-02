@@ -20,6 +20,7 @@ This skill works best as a repeatable maintenance loop rather than a one-off dum
 
 - Inventory first: otherwise you do not know which repos are new, removed, or already processed.
 - README fetch before classification: repo descriptions and topics are often too shallow or misleading.
+- Workspace taxonomy before classification: the override changes which lists every script manages, so the ledger must resolve against it.
 - Taxonomy after reading: category quality comes from the corpus, not from guessing up front.
 - Offline plan before online plan: taxonomy and ledger mistakes should be caught without touching GitHub.
 - Online plan before apply: GitHub list updates are write operations and should be reviewed once before mutation.
