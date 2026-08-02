@@ -109,7 +109,9 @@ When reconciling cloud drift, prefer a fresh live read over `--use-membership-ca
 
 An **unmanaged list** is a GitHub user list that exists in the cloud but is not part of the loaded taxonomy (for example `music-players` after it was merged into `media-players`, or `general-software` after the fallback was renamed). `apply_user_lists.py` preserves unmanaged lists by default: it never touches their memberships, and repos in them are left alone.
 
-Deleting an unmanaged list is destructive and irreversible — the list and all of its memberships are gone. **Always pause and ask the user before deleting any list**, even one that looks abandoned: present the exact list names, each list's repo count, and the consequence (memberships removed; repos keep their other lists). Proceed only on explicit user approval.
+Whenever the online plan or drift audit reveals unmanaged lists, report them to the user and ask whether they should be deleted — do not silently keep them, and do not delete them without asking. Present the exact list names, each list's repo count, and the consequence of deletion (memberships removed; repos keep their other lists).
+
+Deleting an unmanaged list is destructive and irreversible — the list and all of its memberships are gone. Proceed only on explicit user approval.
 
 Delete with the GraphQL mutation — the skill has no delete-list script:
 

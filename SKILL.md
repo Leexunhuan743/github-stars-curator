@@ -39,7 +39,7 @@ Classify into the most specific bucket that fits; `everything-else` exists for r
 6. If the user asks for local-only skill work, taxonomy design, or offline review, do not access GitHub or the browser.
 7. `scripts/apply_user_lists.py` requires PyYAML. If it is missing, install it with `python -m pip install pyyaml`.
 8. Ledger shape is validated from `references/classification-ledger.schema.json`; keep that schema as the source for assignment field rules.
-9. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (cloud lists outside the loaded taxonomy) are preserved by default; removing them requires pausing and getting explicit user approval first (see `references/workflow.md`, Cleaning up unmanaged lists).
+9. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (cloud lists outside the loaded taxonomy) are preserved by default; when the online plan or drift audit reveals them, ask the user whether to delete them — never delete without explicit approval (see `references/workflow.md`, Cleaning up unmanaged lists).
 
 ## Default Workspace Layout
 
