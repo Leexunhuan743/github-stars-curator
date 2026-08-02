@@ -107,7 +107,11 @@ When reconciling cloud drift, prefer a fresh live read over `--use-membership-ca
 
 ## Cleaning up unmanaged lists
 
-Lists on GitHub that are not part of the loaded taxonomy are preserved by default. To retire them (a taxonomy merge or rename left legacy lists behind), delete them with the GraphQL mutation — the skill has no delete-list script:
+An **unmanaged list** is a GitHub user list that exists in the cloud but is not part of the loaded taxonomy (for example `music-players` after it was merged into `media-players`, or `general-software` after the fallback was renamed). `apply_user_lists.py` preserves unmanaged lists by default: it never touches their memberships, and repos in them are left alone.
+
+Deleting an unmanaged list is destructive and irreversible — the list and all of its memberships are gone. **Always pause and ask the user before deleting any list**, even one that looks abandoned: present the exact list names, each list's repo count, and the consequence (memberships removed; repos keep their other lists). Proceed only on explicit user approval.
+
+Delete with the GraphQL mutation — the skill has no delete-list script:
 
 ```bash
 gh api graphql -f query='mutation($id: ID!) { deleteUserList(input: {listId: $id}) { clientMutationId } }' -F id=UL_...
