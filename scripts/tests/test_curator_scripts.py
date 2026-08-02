@@ -988,3 +988,33 @@ def test_plan_is_identical_regardless_of_existing_list_order(tmp_path):
     assert plan_a["repoUpdates"] == plan_b["repoUpdates"]
     assert plan_a["desiredLists"] == plan_b["desiredLists"]
     assert plan_a["missingLists"] == plan_b["missingLists"]
+
+
+def test_missing_lists_are_created_in_taxonomy_order():
+    # GitHub orders lists by creation time, so creating missing lists in
+    # taxonomy order is what keeps the cloud list order meaningful.
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_create_order_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    all_names = list(taxonomy["names"])
+    # scramble the assignment order; creation order must still follow the taxonomy
+    assignments = [
+        {"nameWithOwner": "owner/repo", "finalLists": all_names[::-1]}
+    ]
+    plan = apply_lists.build_plan(
+        assignments,
+        [{"id": "R1", "nameWithOwner": "owner/repo"}],
+        taxonomy,
+        existing_by_name={},
+        memberships={},
+    )
+    assert plan["missingLists"] == all_names
+    # and with only some lists existing, the missing ones keep taxonomy order
+    existing = {name: {"id": f"L{i}", "name": name, "description": ""} for i, name in enumerate(all_names[::2])}
+    plan_partial = apply_lists.build_plan(
+        assignments,
+        [{"id": "R1", "nameWithOwner": "owner/repo"}],
+        taxonomy,
+        existing_by_name=existing,
+        memberships={},
+    )
+    assert plan_partial["missingLists"] == [n for n in all_names if n not in existing]
