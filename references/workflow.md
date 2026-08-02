@@ -118,6 +118,20 @@ gh api graphql -f query='mutation($id: ID!) { deleteUserList(input: {listId: $id
 
 Deleting a list removes its memberships; repos stay in their other lists. After any list deletion, or after an apply interrupted mid-run, rerun the online plan: already-created lists are not re-created (missing lists = 0) and repo updates resume idempotently.
 
+## Bucket overload review
+
+When any managed list holds roughly 40 or more repos (or clearly outgrows the rest — roughly double the median bucket size), pause the classification flow and run this review. The `everything-else` fallback deserves the same treatment when it grows past a few dozen repos: that is the clearest signal that the taxonomy is missing buckets.
+
+1. List every repo in the overloaded bucket with its summary or description.
+2. Cluster them by main function or theme and count each cluster.
+3. Check each cluster against the existing bucket definitions: repos that actually fit a specialized bucket were misclassified — reclassify them instead of creating anything.
+4. For clusters with no existing home, evaluate the "New lists are justified only when" conditions from `references/taxonomy-rubric.md` (stable concept, a few repos now or clearly soon, retrieval value, room under the 32-list cap).
+5. Present the user with: the bucket's current count, the cluster breakdown, and concrete split proposals — each with a proposed list name, definition, expected repo count, and the retrieval question it answers.
+6. Ask the user which proposals to adopt (none is a valid answer).
+7. Record adopted lists in `<workspace>/taxonomy.yaml` — the workspace copy is the user's own template, separate from the bundled one; if it does not exist yet, copy `references/taxonomy-template.yaml` there first. Then reclassify the affected repos into the new lists, update the ledger, and continue with the normal offline/online plan.
+
+Propose splits only where the cluster is stable and the split serves a real retrieval question; a single lonely sub-theme stays in the parent bucket.
+
 ## Large-scale reclassification
 
 For a full reclassification of hundreds of repos onto changed bucket definitions, run parallel subagents: split the repo list (description + meta summary + topics + legacy lists as reference-only) into batches, give each batch the bucket definitions plus explicit re-review instructions for legacy wide buckets (`desktop-apps` / `everything-else` / `self-hosted` / `dev-tools` / `references-guides`), then validate the aggregate 1:1 (name coverage, bucket-name whitelist) before writing the ledger. This path replaces `write_classification.py` — the aggregate validation is its equivalent gate, and the written ledger is the new full record (no `--merge-into-full` needed).

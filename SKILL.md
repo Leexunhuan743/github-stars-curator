@@ -147,6 +147,8 @@ If the taxonomy would exceed 32 lists, merge the lowest-value or most overlappin
 
 When a user's taxonomy should differ from the bundled template, copy `references/taxonomy-template.yaml` to `<workspace>/taxonomy.yaml` and edit the workspace copy. Avoid modifying the installed skill just to add a local custom list during ordinary curation.
 
+When any bucket holds roughly 40+ repos or clearly outgrows the rest — or `everything-else` grows past a few dozen — run the bucket overload review before refining anything: analyze what the repos actually are, propose concrete splits, and ask the user which to adopt (see `references/workflow.md`, Bucket overload review). Adopted lists are recorded in `<workspace>/taxonomy.yaml`, the user's own template, never in the bundled one.
+
 Done when the taxonomy stays at or under the 32-list cap and every list name the ledger uses resolves against the workspace taxonomy.
 
 ### 5. Produce the taxonomy summary
