@@ -620,6 +620,12 @@ Belongs here:
 
 Do not use this for developer utilities that ship as tools (editors, CLIs) — those belong in `dev-tools` or `terminal`.
 
+Common confusions:
+
+- if it is a tool that ships as a product (editor, CLI, local utility), use `dev-tools` or `terminal`,
+- if it is an AI end-user application built on a framework, use `ai-agents`,
+- if it is data or model infrastructure (databases, ML engines), use `data-ml-tools`.
+
 ### `data-ml-tools`
 
 Definition:
@@ -636,6 +642,12 @@ Belongs here:
 - databases, search engines, key-value/vector stores, ORMs, and drivers (redis, elasticsearch, ClickHouse, milvus, prisma).
 
 Do not use this for AI end-user apps (use `ai-agents`) or data pipelines that ship as deployable services (use `self-hosted`).
+
+Common confusions:
+
+- if it is an end-user AI application or agent product, use `ai-agents`,
+- if it is a deployable data pipeline or database service the user runs, use `self-hosted`,
+- if it is a general web/app framework rather than data or ML infrastructure, use `frameworks-libraries`.
 
 ## Formal rules for creative, business, scraping, and security lists
 
@@ -654,6 +666,12 @@ Belongs here:
 - 3D modeling/rendering (blender, openscad), emulators (RPCS3), custom firmware (Atmosphere),
 - generative creative tools (stable-diffusion-webui, manim, freemocap).
 
+Common confusions:
+
+- if the main workflow is consuming media (watching, listening, browsing), use `media-players`,
+- if it is a design asset (font, icon, theme) rather than an application, use `design-assets`,
+- if it is a general desktop editing application, use `desktop-apps`.
+
 ### `design-assets`
 
 Definition:
@@ -661,6 +679,11 @@ Definition:
 `Fonts, icon sets, color themes, and reusable design resources.`
 
 Use this for assets designers and developers drop into their work (FiraCode, Inter, Font-Awesome, catppuccin). Not for design applications — those belong in `desktop-apps` or `game-3d-creative`.
+
+Common confusions:
+
+- if it is an application that makes or edits designs, use `desktop-apps` or `game-3d-creative`,
+- if it is a developer tool that happens to include assets, use `dev-tools`.
 
 ### `business-apps`
 
@@ -670,6 +693,11 @@ Definition:
 
 Use this for software built around a business workflow (keystonejs, invoiceninja, cal.diy, discourse, metabase, mall). Desktop clients of such platforms stay in `desktop-apps`; deployable instances can pair `self-hosted`.
 
+Common confusions:
+
+- if it is the desktop client of a business platform rather than the platform itself, use `desktop-apps`,
+- if the deployable instance is the product, pair or prefer `self-hosted`.
+
 ### `web-scraping-data-collection`
 
 Definition:
@@ -678,6 +706,11 @@ Definition:
 
 Use this when the repo acquires data from the web (firecrawl, crawl4ai, instagrapi). Do not put security tooling here — it belongs in `security-pentest-tools`.
 
+Common confusions:
+
+- if the tool is for downloading media files rather than harvesting data, use `downloaders`,
+- if it is security/OSINT/penetration tooling, use `security-pentest-tools`.
+
 ### `security-pentest-tools`
 
 Definition:
@@ -685,3 +718,8 @@ Definition:
 `Security tooling: OSINT, penetration testing, reverse engineering, and exploit frameworks.`
 
 Use this when the repo is security research or offensive tooling (sherlock, bettercap, x64dbg, cutter, PayloadsAllTheThings). Separated from scraping because the two retrieval questions differ.
+
+Common confusions:
+
+- if it acquires data without a security intent, use `web-scraping-data-collection`,
+- if it is a developer debugger or analysis tool without offensive intent, use `dev-tools`.

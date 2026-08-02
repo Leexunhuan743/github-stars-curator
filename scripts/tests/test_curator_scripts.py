@@ -876,3 +876,57 @@ def test_write_classification_merge_into_full_requires_existing_full(tmp_path):
     writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_merge_missing_test")
     with pytest.raises(ValueError, match="Full ledger not found"):
         writer.merge_into_full(tmp_path / "nope.json", [], "incremental-ledger")
+
+
+AUDIT_SCRIPT = SKILL_DIR / "scripts" / "audit_cloud_drift.py"
+
+
+def test_drift_audit_ledger_memberships_filters_managed_and_inventory(tmp_path):
+    audit = load_module(AUDIT_SCRIPT, "audit_ledger_memberships_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_audit_support_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    managed = set(taxonomy["names"])
+    assignments = [
+        {"nameWithOwner": "owner/in-inventory", "finalLists": ["downloaders", "custom"]},
+        {"nameWithOwner": "owner/not-in-inventory", "finalLists": ["terminal"]},
+    ]
+    memberships = audit.ledger_memberships(
+        assignments, managed, inventory_names={"owner/in-inventory"}
+    )
+    assert memberships == {"owner/in-inventory": {"downloaders"}}
+    assert memberships.get("owner/not-in-inventory") is None
+
+
+def test_drift_audit_summarize_reports_only_differences():
+    audit = load_module(AUDIT_SCRIPT, "audit_summarize_test")
+    local = {
+        "owner/same": {"downloaders"},
+        "owner/local-only": {"terminal"},
+    }
+    live = {
+        "owner/same": {"downloaders"},
+        "owner/live-only": {"media-players"},
+    }
+    repo_drift, list_drift = audit.summarize_drift(local, live)
+    by_name = {item["nameWithOwner"]: item for item in repo_drift}
+    assert "owner/same" not in by_name
+    assert by_name["owner/local-only"]["localNotLive"] == ["terminal"]
+    assert by_name["owner/local-only"]["liveNotLocal"] == []
+    assert by_name["owner/live-only"]["liveNotLocal"] == ["media-players"]
+    assert list_drift["terminal"]["localNotLive"] == ["owner/local-only"]
+    assert list_drift["media-players"]["liveNotLocal"] == ["owner/live-only"]
+
+
+def test_drift_audit_all_inventory_marks_absent_repos_as_empty():
+    audit = load_module(AUDIT_SCRIPT, "audit_all_inventory_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_audit_all_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    managed = set(taxonomy["names"])
+    local = audit.ledger_memberships(
+        [{"nameWithOwner": "owner/ledgered", "finalLists": ["downloaders"]}],
+        managed,
+        inventory_names={"owner/ledgered", "owner/unledgered"},
+    )
+    for name in {"owner/ledgered", "owner/unledgered"}:
+        local.setdefault(name, set())
+    assert local == {"owner/ledgered": {"downloaders"}, "owner/unledgered": set()}
