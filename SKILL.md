@@ -199,7 +199,7 @@ Done when the report answers every bullet above, including an explicit "none" fo
 
 ## Classification Rules
 
-1. Prefer function over implementation language. A Rust clipboard tool still belongs in `desktop-apps` before it belongs in a generic Rust bucket.
+1. Prefer function over implementation language, and classify into the most specific bucket that fits. A Rust clipboard tool belongs in `clipboard-tools`, not in a generic Rust bucket.
 2. Use multiple lists when they improve retrieval, but keep them meaningful: two lists earn their place only when both names serve a future search question.
 3. Favor stable user intent:
    - what the repo is for,
