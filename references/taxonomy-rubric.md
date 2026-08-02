@@ -543,7 +543,7 @@ Common confusions:
 - self-hosted cloud drives, WebDAV tools, file sharing, R2/S3 browsers, and transfer tools belong in `cloud-drive-transfer-sync`,
 - Cloudflare tunnel, proxy, relay, edge gateway, and proxy subscription projects belong in `cloudflare-network-proxy`,
 - AI-agent services belong first in the relevant AI bucket if agent behavior is the main product,
-- a self-hosted media library server with a playback surface (Plex/Jellyfin-style) can pair `media-players` with `self-hosted`.
+- self-hosted media library servers (Plex/Jellyfin-style) belong in `self-hosted`; player clients and front-ends belong in `media-players`.
 
 ### `cloudflare-network-proxy`
 
