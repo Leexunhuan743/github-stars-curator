@@ -789,42 +789,20 @@ Common confusions:
 
 ## Taxonomy scope and extension candidates
 
-The bundled taxonomy is scoped to a personal-software + AI-tooling star set. A 500-repo probe of GitHub's top-starred repositories (star bands 5k-100k+) found ~14% of repos with no honest home and heavy misplacement into `dev-tools`/`self-hosted`/`references-guides`, clustered into the nine candidate buckets below. When the star set being curated is dominated by any of these clusters, copy the relevant buckets into `<workspace>/taxonomy.yaml` (name, description, and a slot in the list order) before classifying — do not force such repos into existing broad buckets.
+The bundled taxonomy is scoped to a personal-software + AI-tooling star set. A manually labeled 500-repo probe of GitHub's top-starred repositories (star bands 5k-100k+) leaves ~38% of repos with no honest home — web/UI frameworks and libraries, languages, data/ML infra, databases, cloud-native tooling, games/3D, design assets, business apps, security tooling, scrapers, chat platforms. The heavy misplacement into `dev-tools`/`self-hosted`/`references-guides` that a keyword probe showed is exactly the failure this section prevents.
 
-### `web-frameworks-ui-libraries`
+Eleven extension buckets cover that gap; with all of them active the probe coverage rises to ~98% (remaining stragglers are long tails: OS kernels, smart-home hubs, blockchain nodes, non-software repos). Machine-readable definitions live in `references/taxonomy-extension-candidates.yaml` — copy the buckets this star set actually needs into `<workspace>/taxonomy.yaml` (name, description, and a slot in the list order) before classifying; do not force such repos into existing broad buckets.
 
-Web front- and back-end frameworks, UI/component libraries, CSS frameworks, template engines, and chart/map/whiteboard front-end libraries (react, vue, bootstrap, ant-design, material-ui, tailwind, svelte, django, gin, next.js, d3, mermaid, Leaflet, excalidraw).
-
-### `programming-languages-runtimes`
-
-Programming languages, compilers, runtimes, and language toolchains (golang/go, TypeScript, Bend, llama2.c, Node toolchains).
-
-### `data-ml-tools`
-
-Data science and machine learning frameworks, model inference infrastructure, and search/data stores (pandas, tensorflow, transformers, vllm, opencv, elasticsearch, exo, moondream).
-
-### `cloud-native-infra`
-
-Containers, orchestration, cloud-native and observability infrastructure (kubernetes, ingress-nginx, cadvisor, terraform, prometheus, grafana, CI systems). Self-hosted monitoring apps that ship as products still belong in `self-hosted`.
-
-### `game-3d-creative`
-
-Games, game engines/SDKs, 3D modeling and rendering, and generative creative tools (DOOM, source-sdk, blender, stable-diffusion-webui, manim, freemocap).
-
-### `design-assets`
-
-Fonts, icon sets, color themes, and reusable design resources (FiraCode, Inter, intel-one-mono, catppuccin).
-
-### `business-apps`
-
-Business and industry software: CMS, invoicing, scheduling, e-commerce backends (keystonejs, invoiceninja, cal.diy, mall-class e-commerce systems).
-
-### `chat-communication`
-
-Chat, IM, VoIP, and communication platforms (Rocket.Chat, fluxer, Matrix servers/clients). Desktop chat clients without a server component stay in `desktop-apps`.
-
-### `web-scraping-data-collection`
-
-Scrapers, data collection APIs, and OSINT tooling (firecrawl, sherlock, instagrapi, XHS-style scrapers). Several repos currently sitting in `general-software` fall here.
+- `web-frameworks-ui-libraries` — web and application frameworks, UI/component libraries, front-end libraries, templates, admin panels (react, vue, bootstrap, antd, tailwind, django, gin, next.js, electron, tauri, flutter, d3, mermaid, Leaflet)
+- `programming-languages-runtimes` — languages, compilers, runtimes, toolchains (go, TypeScript, rust, node, bun, julia, Bend, triton)
+- `data-ml-tools` — data science/ML frameworks, model inference infra, data libraries (pandas, tensorflow, transformers, vllm, ollama, llama.cpp, opencv, langchain)
+- `databases-data-stores` — databases, search engines, key-value/vector stores, ORMs, drivers (redis, elasticsearch, ClickHouse, milvus, prisma)
+- `cloud-native-infra` — containers, orchestration, cloud-native and observability infra (kubernetes, ingress-nginx, cadvisor, terraform, prometheus-operator, airflow). Self-hosted monitoring apps that ship as products still belong in `self-hosted`
+- `game-3d-creative` — games, engines/SDKs, 3D modeling/rendering, emulators, firmware, generative creative tools (DOOM, godot, bevy, blender, source-sdk, RPCS3, stable-diffusion-webui)
+- `design-assets` — fonts, icon sets, themes, design resources (FiraCode, Inter, Font-Awesome, catppuccin)
+- `business-apps` — CMS, invoicing, scheduling, e-commerce, BI, support platforms (keystonejs, invoiceninja, cal.diy, discourse, metabase, mall)
+- `chat-communication` — chat/IM/VoIP platforms (Rocket.Chat, fluxer). Desktop chat clients without a server component stay in `desktop-apps`
+- `web-scraping-data-collection` — scrapers and data-acquisition automation (firecrawl, crawl4ai, instagrapi). Do not put security tooling here — it belongs in `security-pentest-tools`
+- `security-pentest-tools` — OSINT, penetration testing, reverse engineering, exploit frameworks (sherlock, bettercap, x64dbg, cutter, PayloadsAllTheThings). Separated from scraping because the two retrieval questions differ
 
 Activate at most the buckets the star set actually needs, keep the total under the 32-list cap, and keep this rubric's prose aligned with the workspace `taxonomy.yaml` after extension.

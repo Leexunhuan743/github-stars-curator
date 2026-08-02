@@ -27,7 +27,7 @@ Read references only when the task needs them:
 
 The bundled taxonomy serves a personal-software + AI-tooling star set: desktop apps, media, notes and reading, download/transfer utilities, agent harnesses and skills, self-hosted services, and reference material. It is not a general-purpose GitHub taxonomy — a 500-repo probe of GitHub's top-starred repositories (5k-100k+ star bands, manually labeled) left ~38% of repos unclassifiable: web frameworks and UI libraries, programming languages and runtimes, data/ML infrastructure, cloud-native tooling, games and 3D, fonts and design assets, business apps, security/OSINT tooling, scrapers, blockchain, and chat platforms.
 
-For a star set dominated by developer infrastructure, extend `<workspace>/taxonomy.yaml` with the extension candidate buckets in `references/taxonomy-rubric.md` (Taxonomy scope and extension candidates) before classifying; force no repo into `dev-tools` or `general-software` just because no bucket fits.
+For a star set dominated by developer infrastructure, extend `<workspace>/taxonomy.yaml` with the extension candidate buckets in `references/taxonomy-extension-candidates.yaml` (eleven buckets covering web/UI frameworks, languages, data/ML, databases, cloud-native, games/3D, design assets, business apps, chat, scraping, security) before classifying; force no repo into `dev-tools` or `general-software` just because no bucket fits.
 
 ## Preconditions
 
@@ -250,5 +250,6 @@ If `gh` cannot perform the needed operation:
 - `references/workflow.md`: end-to-end operating procedure
 - `references/taxonomy-rubric.md`: starter taxonomy and list-creation heuristics
 - `references/taxonomy-template.yaml`: machine-readable starter taxonomy
+- `references/taxonomy-extension-candidates.yaml`: machine-readable extension buckets for developer-infrastructure star sets
 - `references/classification-ledger.schema.json`: reviewable schema for ledger assignments
 - `references/github-graphql-notes.md`: auth, API behavior, and writeback caveats

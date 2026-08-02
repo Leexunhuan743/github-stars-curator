@@ -1,0 +1,34 @@
+# Extension Candidate Buckets — GitHub Stars Curator
+#
+# Copy the buckets this star set actually needs into <workspace>/taxonomy.yaml
+# before classifying. Names and descriptions are load-bearing: apply_user_lists.py
+# matches list names exactly, and these descriptions are what the GitHub list
+# gets when the bucket is created.
+#
+# These eleven buckets come from a manual 500-repo probe of GitHub's
+# top-starred repositories: with all of them active, coverage of that probe
+# rises from ~62% to ~98% (remaining stragglers are long tails: OS kernels,
+# smart-home hubs, blockchain nodes, non-software repos).
+
+- name: web-frameworks-ui-libraries
+  description: "Web and application frameworks, UI/component libraries, CSS frameworks, front-end libraries, templates and admin panels (react, vue, bootstrap, ant-design, tailwind, django, gin, next.js, electron, tauri, flutter, d3, mermaid, Leaflet, excalidraw)."
+- name: programming-languages-runtimes
+  description: "Programming languages, compilers, runtimes, and language toolchains (golang/go, TypeScript, rust, node, bun, julia, Bend, triton)."
+- name: data-ml-tools
+  description: "Data science and machine learning frameworks, model inference infrastructure, and data/ML libraries (pandas, tensorflow, transformers, vllm, ollama, llama.cpp, opencv, langchain, sktime, pyod)."
+- name: databases-data-stores
+  description: "Databases, search engines, key-value and vector stores, ORMs, and database drivers (redis, elasticsearch, ClickHouse, milvus, prisma, sqlite-family tools)."
+- name: cloud-native-infra
+  description: "Containers, orchestration, cloud-native and observability infrastructure (kubernetes, ingress-nginx, cadvisor, terraform, prometheus-operator, airflow, serverless)."
+- name: game-3d-creative
+  description: "Games, game engines and SDKs, 3D modeling and rendering, emulators, firmware, and generative creative tools (DOOM, godot, bevy, blender, source-sdk, RPCS3, stable-diffusion-webui, manim)."
+- name: design-assets
+  description: "Fonts, icon sets, color themes, and reusable design resources (FiraCode, Inter, intel-one-mono, Font-Awesome, catppuccin)."
+- name: business-apps
+  description: "Business and industry software: CMS, invoicing, scheduling, e-commerce, BI, and support platforms (keystonejs, invoiceninja, cal.diy, discourse, metabase, mall)."
+- name: chat-communication
+  description: "Chat, IM, VoIP, and communication platforms (Rocket.Chat, fluxer, Matrix servers and clients)."
+- name: web-scraping-data-collection
+  description: "Scrapers, data collection APIs, and browser automation for data acquisition (firecrawl, crawl4ai, instagrapi, XHS-style scrapers)."
+- name: security-pentest-tools
+  description: "Security tooling: OSINT, penetration testing, reverse engineering, and exploit frameworks (sherlock, bettercap, x64dbg, cutter, PayloadsAllTheThings, zxw tools)."
