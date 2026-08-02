@@ -25,7 +25,7 @@ Read references only when the task needs them:
 
 ## Taxonomy Scope
 
-The bundled taxonomy serves a personal-software + AI-tooling star set: desktop apps, media, notes and reading, download/transfer utilities, agent harnesses and skills, self-hosted services, and reference material. It is not a general-purpose GitHub taxonomy — a 500-repo probe of GitHub's top-starred repositories left ~14% unclassifiable (web frameworks, languages, data/ML infrastructure, games, fonts, business apps, chat platforms).
+The bundled taxonomy serves a personal-software + AI-tooling star set: desktop apps, media, notes and reading, download/transfer utilities, agent harnesses and skills, self-hosted services, and reference material. It is not a general-purpose GitHub taxonomy — a 500-repo probe of GitHub's top-starred repositories (5k-100k+ star bands, manually labeled) left ~38% of repos unclassifiable: web frameworks and UI libraries, programming languages and runtimes, data/ML infrastructure, cloud-native tooling, games and 3D, fonts and design assets, business apps, security/OSINT tooling, scrapers, blockchain, and chat platforms.
 
 For a star set dominated by developer infrastructure, extend `<workspace>/taxonomy.yaml` with the extension candidate buckets in `references/taxonomy-rubric.md` (Taxonomy scope and extension candidates) before classifying; force no repo into `dev-tools` or `general-software` just because no bucket fits.
 
