@@ -136,6 +136,8 @@ Done when every repo in scope has non-empty `finalLists` and `classificationStat
 
 ### 4. Refine the taxonomy
 
+Before refining, check whether `<workspace>/taxonomy.yaml` exists: it overrides the bundled template for every script (`choose_taxonomy_path` picks it up automatically when present). If the user needs custom lists, create it from `references/taxonomy-template.yaml` and add the lists there — never in the bundled file. When it exists, compare its list names with the ledger's `finalLists` before planning and flag any mismatch.
+
 Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
 
 - the bucket has a stable concept,
@@ -183,7 +185,7 @@ python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-
 
 Apply preserves existing GitHub lists outside the managed taxonomy by default and rejects unknown list names; `--replace-all-lists` and `--allow-unknown-lists` are deliberate opt-outs documented in `references/workflow.md` (List sync safety).
 
-Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, the writeback summary and journal were written, and the ledger record is current (narrow runs: merged with `write_classification.py --merge-into-full`; full reclassification: the new full ledger is the record).
+Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, the writeback summary and journal were written, the ledger record is current (narrow runs: merged with `write_classification.py --merge-into-full`; full reclassification: the new full ledger is the record), and the plan's `taxonomyPath` points at the intended taxonomy (the workspace override when present).
 
 ### 7. Report the result cleanly
 

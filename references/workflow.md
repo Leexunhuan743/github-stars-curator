@@ -8,7 +8,7 @@ This skill works best as a repeatable maintenance loop rather than a one-off dum
 2. Fetch READMEs for all stars or only the new stars.
 3. Read README content and enrich the per-repo metadata.
 4. Refine the taxonomy only after reading real content.
-5. Copy `references/taxonomy-template.yaml` to `<workspace>/taxonomy.yaml` if the user needs a local taxonomy override.
+5. Check `<workspace>/taxonomy.yaml` before classifying: if it exists it overrides the bundled template for all scripts — confirm the ledger's list names resolve against it, and keep it in sync when the user adds custom lists.
 6. Generate a classification ledger and human-readable summary.
 7. Run list sync in offline plan mode.
 8. Verify GitHub access with `gh auth status`.
