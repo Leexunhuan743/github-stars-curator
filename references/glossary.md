@@ -21,3 +21,7 @@ Any mutation of GitHub star lists, gated behind offline plan, then online plan, 
 ## Narrow Incremental Ledger
 
 A ledger containing only the repos intentionally changed in the current run, each with its current live lists plus desired lists in `finalLists`. The drift-safe alternative to re-applying an old full ledger.
+
+## Unmanaged List
+
+A GitHub user list that exists in the cloud but is not part of the loaded taxonomy (for example `music-players` after it was merged into `media-players`, or `general-software` after the fallback was renamed). `apply_user_lists.py` preserves unmanaged lists by default; deleting one is destructive and requires explicit user approval (see `references/workflow.md`, Cleaning up unmanaged lists).

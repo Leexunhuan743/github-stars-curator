@@ -82,8 +82,7 @@ The command exits zero when there is no drift and non-zero when drift is found. 
 - `star-readmes/raw/*.md`: README corpus
 - `star-readmes/meta/*.json`: per-repo metadata stubs and enrichments
 - `star-readmes/manifest.json`: corpus manifest
-- `star-readmes/classification-ledger.json`: final mapping record
-- `star-readmes/final-star-taxonomy.md`: human-readable taxonomy report
+- `star-readmes/complete-23bucket-ledger.json`: final mapping record
 - `taxonomy.yaml`: optional workspace-owned taxonomy override
 - `github-stars-sync-plan.json`: reviewed plan with `planHash`
 - `github-stars-cloud-drift-report.json`: live-vs-ledger drift audit before writeback
@@ -107,11 +106,9 @@ When reconciling cloud drift, prefer a fresh live read over `--use-membership-ca
 
 ## Cleaning up unmanaged lists
 
-An **unmanaged list** is a GitHub user list that exists in the cloud but is not part of the loaded taxonomy (for example `music-players` after it was merged into `media-players`, or `general-software` after the fallback was renamed). `apply_user_lists.py` preserves unmanaged lists by default: it never touches their memberships, and repos in them are left alone.
+An **unmanaged list** (see `references/glossary.md`) is a GitHub user list outside the loaded taxonomy. `apply_user_lists.py` preserves unmanaged lists by default: it never touches their memberships, and repos in them are left alone.
 
-Whenever the online plan or drift audit reveals unmanaged lists, report them to the user and ask whether they should be deleted — do not silently keep them, and do not delete them without asking. Present the exact list names, each list's repo count, and the consequence of deletion (memberships removed; repos keep their other lists).
-
-Deleting an unmanaged list is destructive and irreversible — the list and all of its memberships are gone. Proceed only on explicit user approval.
+Whenever the online plan or drift audit reveals unmanaged lists, report them to the user with exact list names, each list's repo count, and the consequence of deletion (memberships removed; repos keep their other lists), and ask whether they should be deleted. Deletion proceeds only on explicit user approval — it is destructive and irreversible.
 
 Delete with the GraphQL mutation — the skill has no delete-list script:
 
@@ -123,12 +120,13 @@ Deleting a list removes its memberships; repos stay in their other lists. After 
 
 ## Large-scale reclassification
 
-For a full reclassification of hundreds of repos onto changed bucket definitions, run parallel subagents: split the repo list (description + meta summary + topics + legacy lists as reference-only) into batches, give each batch the bucket definitions plus explicit re-review instructions for legacy wide buckets (`desktop-apps` / `everything-else` / `self-hosted` / `dev-tools` / `references-guides`), then validate the aggregate 1:1 (name coverage, bucket-name whitelist) before writing the ledger.
+For a full reclassification of hundreds of repos onto changed bucket definitions, run parallel subagents: split the repo list (description + meta summary + topics + legacy lists as reference-only) into batches, give each batch the bucket definitions plus explicit re-review instructions for legacy wide buckets (`desktop-apps` / `everything-else` / `self-hosted` / `dev-tools` / `references-guides`), then validate the aggregate 1:1 (name coverage, bucket-name whitelist) before writing the ledger. This path replaces `write_classification.py` — the aggregate validation is its equivalent gate, and the written ledger is the new full record (no `--merge-into-full` needed).
 
 ## Human review checkpoints
 
 Pause for a quick review when any of these happen:
 
+- unmanaged lists are discovered by the online plan or drift audit,
 - the taxonomy would exceed 32 lists,
 - the local `taxonomy.yaml` differs substantially from the bundled template,
 - the cloud drift audit reports differences or the online plan shows unexpected `listsToRemove`,

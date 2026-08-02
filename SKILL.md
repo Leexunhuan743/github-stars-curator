@@ -39,7 +39,7 @@ Classify into the most specific bucket that fits; `everything-else` exists for r
 6. If the user asks for local-only skill work, taxonomy design, or offline review, do not access GitHub or the browser.
 7. `scripts/apply_user_lists.py` requires PyYAML. If it is missing, install it with `python -m pip install pyyaml`.
 8. Ledger shape is validated from `references/classification-ledger.schema.json`; keep that schema as the source for assignment field rules.
-9. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (cloud lists outside the loaded taxonomy) are preserved by default; when the online plan or drift audit reveals them, ask the user whether to delete them — never delete without explicit approval (see `references/workflow.md`, Cleaning up unmanaged lists).
+9. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (see `references/glossary.md`) are preserved by default; when the online plan or drift audit reveals them, ask the user whether to delete them — never delete without explicit approval (see `references/workflow.md`, Cleaning up unmanaged lists).
 
 ## Default Workspace Layout
 
@@ -53,11 +53,11 @@ Unless the user specifies another path, create or reuse a workspace folder like:
     manifest.json
     summary.json
     readme-index.json
-    classification-ledger.json
-    final-star-taxonomy.md
+    complete-23bucket-ledger.json
   github-stars.json
   github-stars-delta.json
   taxonomy.yaml
+  github-stars-sync-plan.json
   github-stars-writeback-summary.json
   github-stars-writeback-journal.jsonl
 ```
@@ -130,9 +130,9 @@ When the README and metadata disagree, prefer the README.
 
 Record the results with `scripts/write_classification.py` (see Scripts). It validates every list name against the workspace taxonomy, merges the classification fields into `star-readmes/meta/*.json` without touching upstream repo metadata, and emits a ledger file that `apply_user_lists.py` can consume directly. Treat the emitted ledger as the narrow incremental ledger for this run's repos.
 
-For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification).
+For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification). The aggregate validation (1:1 name coverage, bucket-name whitelist) replaces `write_classification.py` for that path.
 
-Done when every repo in scope has non-empty `finalLists`, `classificationStatus` set to `reviewed`, and `write_classification.py` reported zero unknown lists.
+Done when every repo in scope has non-empty `finalLists` and `classificationStatus` set to `reviewed`, and list names validated against the workspace taxonomy (via `write_classification.py` or the aggregate whitelist check).
 
 ### 4. Refine the taxonomy
 
@@ -149,28 +149,11 @@ When a user's taxonomy should differ from the bundled template, copy `references
 
 Done when the taxonomy stays at or under the 32-list cap and every list name the ledger uses resolves against the workspace taxonomy.
 
-### 5. Produce a classification ledger
+### 5. Produce the taxonomy summary
 
-Maintain a JSON ledger that can be reviewed and diffed. A good record shape is:
+After the ledger is produced (step 3), generate a human-readable taxonomy summary so the user can audit list intent quickly.
 
-```json
-{
-  "nameWithOwner": "owner/repo",
-  "finalLists": ["list-a", "list-b"],
-  "readmePath": "C:\\path\\to\\README.md",
-  "description": "Short repo description",
-  "summary": "1-3 sentence summary based on the README",
-  "primaryFunction": "download",
-  "facets": ["windows", "self-hosted"],
-  "reason": "Why these lists fit",
-  "confidence": "high",
-  "classificationStatus": "reviewed"
-}
-```
-
-Also generate a human-readable taxonomy summary so the user can audit list intent quickly.
-
-Done when the ledger passes `apply_user_lists.py --offline-plan` with zero failed repos and the taxonomy summary reflects the current ledger.
+Done when the summary reflects the current ledger, and every ledger entry matches the shape documented in `references/classification-ledger.schema.json` (offline-plan validation is step 6's first check).
 
 ### 6. Plan and sync the final mapping
 
@@ -198,7 +181,7 @@ python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/classific
 
 Apply preserves existing GitHub lists outside the managed taxonomy by default and rejects unknown list names; `--replace-all-lists` and `--allow-unknown-lists` are deliberate opt-outs documented in `references/workflow.md` (List sync safety).
 
-Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, the writeback summary and journal were written, and the narrow ledger was merged back into the full ledger record with `write_classification.py --merge-into-full`.
+Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, the writeback summary and journal were written, and the ledger record is current (narrow runs: merged with `write_classification.py --merge-into-full`; full reclassification: the new full ledger is the record).
 
 ### 7. Report the result cleanly
 
