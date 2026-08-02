@@ -23,6 +23,12 @@ Read references only when the task needs them:
 - Read `references/github-graphql-notes.md` only before online plan/apply work or browser fallback.
 - Use `references/taxonomy-template.yaml` as the bundled machine-readable taxonomy. If `<workspace>/taxonomy.yaml` exists, scripts use that workspace taxonomy instead.
 
+## Taxonomy Scope
+
+The bundled taxonomy serves a personal-software + AI-tooling star set: desktop apps, media, notes and reading, download/transfer utilities, agent harnesses and skills, self-hosted services, and reference material. It is not a general-purpose GitHub taxonomy — a 500-repo probe of GitHub's top-starred repositories left ~14% unclassifiable (web frameworks, languages, data/ML infrastructure, games, fonts, business apps, chat platforms).
+
+For a star set dominated by developer infrastructure, extend `<workspace>/taxonomy.yaml` with the extension candidate buckets in `references/taxonomy-rubric.md` (Taxonomy scope and extension candidates) before classifying; force no repo into `dev-tools` or `general-software` just because no bucket fits.
+
 ## Preconditions
 
 1. Prefer `gh` first. Use the browser only if `gh` is unavailable, under-scoped, or cannot perform a required mutation.
@@ -127,7 +133,7 @@ Done when every repo in scope has non-empty `finalLists`, `classificationStatus`
 
 ### 4. Refine the taxonomy
 
-Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
+Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. When the star set lies outside the bundled taxonomy's scope (developer infrastructure), pick from the extension candidate buckets in `references/taxonomy-rubric.md` rather than inventing ad hoc names. New lists are justified only when:
 
 - the bucket has a stable concept,
 - at least a few repos belong there now or obviously soon,

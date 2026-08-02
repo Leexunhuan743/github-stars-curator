@@ -25,6 +25,7 @@ This rubric starts from a practical, retrieval-oriented taxonomy that has alread
 - [Formal rules for publishing lists](#formal-rules-for-publishing-lists)
 - [Formal rules for deployment and network lists](#formal-rules-for-deployment-and-network-lists)
 - [Formal rules for fallback lists](#formal-rules-for-fallback-lists)
+- [Taxonomy scope and extension candidates](#taxonomy-scope-and-extension-candidates)
 
 ## Starter lists
 
@@ -785,3 +786,45 @@ Common confusions:
 - use `general-software` when the repo is understandable but broad,
 - use `misc-explore` when the repo is not yet understood well enough,
 - revisit every `misc-explore` entry during maintenance passes before syncing list changes.
+
+## Taxonomy scope and extension candidates
+
+The bundled taxonomy is scoped to a personal-software + AI-tooling star set. A 500-repo probe of GitHub's top-starred repositories (star bands 5k-100k+) found ~14% of repos with no honest home and heavy misplacement into `dev-tools`/`self-hosted`/`references-guides`, clustered into the nine candidate buckets below. When the star set being curated is dominated by any of these clusters, copy the relevant buckets into `<workspace>/taxonomy.yaml` (name, description, and a slot in the list order) before classifying — do not force such repos into existing broad buckets.
+
+### `web-frameworks-ui-libraries`
+
+Web front- and back-end frameworks, UI/component libraries, CSS frameworks, template engines, and chart/map/whiteboard front-end libraries (react, vue, bootstrap, ant-design, material-ui, tailwind, svelte, django, gin, next.js, d3, mermaid, Leaflet, excalidraw).
+
+### `programming-languages-runtimes`
+
+Programming languages, compilers, runtimes, and language toolchains (golang/go, TypeScript, Bend, llama2.c, Node toolchains).
+
+### `data-ml-tools`
+
+Data science and machine learning frameworks, model inference infrastructure, and search/data stores (pandas, tensorflow, transformers, vllm, opencv, elasticsearch, exo, moondream).
+
+### `cloud-native-infra`
+
+Containers, orchestration, cloud-native and observability infrastructure (kubernetes, ingress-nginx, cadvisor, terraform, prometheus, grafana, CI systems). Self-hosted monitoring apps that ship as products still belong in `self-hosted`.
+
+### `game-3d-creative`
+
+Games, game engines/SDKs, 3D modeling and rendering, and generative creative tools (DOOM, source-sdk, blender, stable-diffusion-webui, manim, freemocap).
+
+### `design-assets`
+
+Fonts, icon sets, color themes, and reusable design resources (FiraCode, Inter, intel-one-mono, catppuccin).
+
+### `business-apps`
+
+Business and industry software: CMS, invoicing, scheduling, e-commerce backends (keystonejs, invoiceninja, cal.diy, mall-class e-commerce systems).
+
+### `chat-communication`
+
+Chat, IM, VoIP, and communication platforms (Rocket.Chat, fluxer, Matrix servers/clients). Desktop chat clients without a server component stay in `desktop-apps`.
+
+### `web-scraping-data-collection`
+
+Scrapers, data collection APIs, and OSINT tooling (firecrawl, sherlock, instagrapi, XHS-style scrapers). Several repos currently sitting in `general-software` fall here.
+
+Activate at most the buckets the star set actually needs, keep the total under the 32-list cap, and keep this rubric's prose aligned with the workspace `taxonomy.yaml` after extension.
