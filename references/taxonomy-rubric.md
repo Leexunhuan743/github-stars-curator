@@ -50,8 +50,7 @@ This rubric starts from a practical, retrieval-oriented taxonomy that has alread
 - `publishing-site-pipelines`: doc-to-site, book-generation, static publishing, content-to-website, and automated publication pipelines
 - `self-hosted`: deployable self-hosted services, home-lab apps, private web tools, APIs, and personal server software
 - `cloudflare-network-proxy`: Cloudflare Workers, tunnels, reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients
-- `general-software`: broad useful software that is understandable but not better captured by a stable specialized bucket
-- `misc-explore`: temporary holding list for ambiguous, under-read, experimental, or still-learning repos that need later review
+- `everything-else`: fallback bucket for repos that fit no specialized list, including ambiguous repos still awaiting review
 
 ## Core front-rank buckets
 
@@ -78,8 +77,7 @@ These twenty-three buckets are the front rank of this skill's taxonomy. When a r
 19. `publishing-site-pipelines`
 20. `self-hosted`
 21. `cloudflare-network-proxy`
-22. `general-software`
-23. `misc-explore`
+22. `everything-else`
 
 Ordering principle:
 
@@ -88,7 +86,7 @@ Ordering principle:
 3. AI, development, terminal, local system, and desktop app workflows: `agent-harnesses`, `agent-skills-mcp`, `ai-agents`, `dev-tools`, `terminal`, `windows-tools`, `desktop-apps`.
 4. Reading, document tooling, notes, self-hosted reading libraries, and reference material: `reading-apps`, `pdf-document-tools`, `note-software`, `selfhosted-reading-bookmarks`, `references-guides`.
 5. Publishing, self-hosted services, and network infrastructure: `publishing-site-pipelines`, `self-hosted`, `cloudflare-network-proxy`.
-6. Controlled fallbacks: `general-software`, then `misc-explore`.
+6. Controlled fallback: `everything-else`.
 
 ## How to choose lists
 
@@ -137,7 +135,7 @@ If a repo spans several areas, use:
 2. one secondary workflow list if it adds retrieval value,
 3. a broad fallback only when needed.
 
-If still unsure, place it in `misc-explore` and record the uncertainty in the ledger.
+If still unsure, place it in `everything-else` and record the uncertainty in the ledger.
 
 ## Formal rules for development-related lists
 
@@ -447,7 +445,7 @@ Do not use this for full image editors, drawing tools, prompt collections, image
 
 Common confusions:
 
-- if the main workflow is editing or creating images, use `desktop-apps`, `general-software`, or a more specific future bucket,
+- if the main workflow is editing or creating images, use `desktop-apps`, `everything-else`, or a more specific future bucket,
 - if the main workflow is downloading galleries/media, use `downloaders`,
 - if the main workflow is reading ebooks, PDFs, or text-heavy documents, use `reading-apps`,
 - if the app is primarily a watch-focused video player with optional image support, use `video-players`.
@@ -474,7 +472,7 @@ Common confusions:
 
 - if the real workflow is acquisition or scraping, use `downloaders`,
 - if the product is primarily an image/photo/comic viewer with optional video support, use `image-viewers`,
-- if the app is mainly a site helper or utility, use a more fitting broad bucket such as `general-software`,
+- if the app is mainly a site helper or utility, use a more fitting broad bucket such as `everything-else`,
 - if the product mainly manages storage, transfer, or sync rather than playback, use `cloud-drive-transfer-sync`.
 
 ## Formal rules for cloud, transfer, and sync lists
@@ -560,7 +558,7 @@ Do not use this for ordinary developer editors, general desktop tools, or networ
 Common confusions:
 
 - if the repo is primarily a coding-agent runtime, use `agent-harnesses`,
-- if the repo is primarily a broad remote-management or network product rather than a terminal workflow, consider `general-software` or a more specific networking bucket,
+- if the repo is primarily a broad remote-management or network product rather than a terminal workflow, consider `everything-else` or a more specific networking bucket,
 - classify SSH clients and remote shell tools directly in `terminal`.
 
 ## Formal rules for Windows lists
@@ -620,7 +618,7 @@ Common confusions:
 - if the main value is clipboard history, pasteboard management, or cross-device copy/paste, use `clipboard-tools`,
 - if the app is primarily a developer utility, use `dev-tools`,
 - if it is mainly notes, markdown knowledge, or PKM, use `note-software`,
-- if it is useful software but not specifically a desktop app or native GUI utility, use `general-software`.
+- if it is useful software but not specifically a desktop app or native GUI utility, use `everything-else`.
 
 ## Formal rules for reference and learning lists
 
@@ -738,22 +736,22 @@ Common confusions:
 
 ## Formal rules for fallback lists
 
-### `general-software`
+### `everything-else`
 
 Definition:
 
-`Broad useful software that is understandable but not better captured by a stable specialized bucket.`
+`Fallback bucket for repos that fit no specialized list: clear-purpose software with no specialist home, and ambiguous or under-read repos still awaiting review.`
 
-Use this as the final normal bucket for usable software whose purpose is clear, but whose workflow does not justify a dedicated list and does not fit an existing specialized list.
+Use this as the single final bucket when no specialized list fits after reading the README. There is no separate holding list: repos that are not yet understood and repos that are understood-but-unspecialized both land here, and the ledger `reason` records which case applies.
 
 Belongs here:
 
 - useful apps or utilities with a clear purpose but no stable specialist home,
 - cross-domain tools that would make several specific buckets noisier,
-- small products where the main retrieval question is simply "useful software",
-- libraries or utilities that are not primarily developer workflow tools.
+- ambiguous, experimental, or under-read repos needing later review,
+- small products where the main retrieval question is simply "useful software".
 
-Do not use this when any specific bucket fits. It should be rare after the README has been read.
+Do not use this as a convenience bucket for low-confidence work on repos with a clear function — choose the closest specific bucket and record uncertainty in the ledger.
 
 Common confusions:
 
@@ -761,31 +759,7 @@ Common confusions:
 - developer tools belong in `dev-tools`,
 - Windows system utilities belong in `windows-tools`,
 - deployable services belong in `self-hosted`,
-- unclear repos belong in `misc-explore`, not `general-software`.
-
-### `misc-explore`
-
-Definition:
-
-`Temporary holding list for ambiguous, under-read, experimental, or still-learning repos that need later review.`
-
-Use this only when the repository cannot be classified confidently after reading the README and available metadata, or when it exposes a possible future taxonomy concept that has not yet earned a stable list.
-
-Belongs here:
-
-- ambiguous repos with incomplete or misleading READMEs,
-- experimental projects whose main workflow is unclear,
-- repos that appear to span many domains without a clear primary retrieval intent,
-- one-off concepts being watched for future taxonomy growth,
-- projects that require manual user judgment before final placement.
-
-Do not use this as a convenience bucket for low-confidence work. If the repo has a clear function, choose the closest specific bucket and record uncertainty in the ledger.
-
-Common confusions:
-
-- use `general-software` when the repo is understandable but broad,
-- use `misc-explore` when the repo is not yet understood well enough,
-- revisit every `misc-explore` entry during maintenance passes before syncing list changes.
+- revisit `everything-else` entries during maintenance passes; classify repos that have become understandable since the last pass.
 
 ## Taxonomy scope and extension candidates
 

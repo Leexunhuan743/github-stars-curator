@@ -27,14 +27,14 @@ Read references only when the task needs them:
 
 The bundled taxonomy serves a personal-software + AI-tooling star set: desktop apps, media, notes and reading, download/transfer utilities, agent harnesses and skills, self-hosted services, and reference material. It is not a general-purpose GitHub taxonomy — a 500-repo probe of GitHub's top-starred repositories (5k-100k+ star bands, manually labeled) left ~38% of repos unclassifiable: web frameworks and UI libraries, programming languages and runtimes, data/ML infrastructure, cloud-native tooling, games and 3D, fonts and design assets, business apps, security/OSINT tooling, scrapers, blockchain, and chat platforms.
 
-For a star set dominated by developer infrastructure, extend `<workspace>/taxonomy.yaml` with the extension candidate buckets in `references/taxonomy-extension-candidates.yaml` (eleven buckets covering web/UI frameworks, languages, data/ML, databases, cloud-native, games/3D, design assets, business apps, chat, scraping, security) before classifying; force no repo into `dev-tools` or `general-software` just because no bucket fits.
+For a star set dominated by developer infrastructure, extend `<workspace>/taxonomy.yaml` with the extension candidate buckets in `references/taxonomy-extension-candidates.yaml` (eleven buckets covering web/UI frameworks, languages, data/ML, databases, cloud-native, games/3D, design assets, business apps, chat, scraping, security) before classifying; force no repo into `dev-tools` or `everything-else` just because no bucket fits.
 
 ## Preconditions
 
 1. Prefer `gh` first. Use the browser only if `gh` is unavailable, under-scoped, or cannot perform a required mutation.
 2. Verify `gh auth status` before any writeback. For GitHub star list mutations, the token needs a scope set that includes `user`.
 3. Treat the local corpus and ledger as the working memory, but treat GitHub as the final source of truth for list membership after writeback.
-4. Assume classification is iterative. New or ambiguous repos can stay in a broad holding list such as `misc-explore` until the next pass.
+4. Assume classification is iterative. New or ambiguous repos can stay in the `everything-else` fallback bucket until the next pass.
 5. Before any online writeback, proactively check for cloud drift even if the user did not mention manual edits. Read live GitHub memberships, compare them with the local ledger, and treat live memberships as newer when they differ. Reconcile the local plan with cloud drift, or use a narrow incremental ledger that preserves each target repo's current live lists. Do not apply an old full ledger over possible manual cloud edits.
 6. If the user asks for local-only skill work, taxonomy design, or offline review, do not access GitHub or the browser.
 7. `scripts/apply_user_lists.py` requires PyYAML. If it is missing, install it with `python -m pip install pyyaml`.
@@ -225,7 +225,7 @@ Done when the report answers every bullet above, including an explicit "none" fo
    - what the repo is for,
    - what workflow it supports,
    - what future search question it answers.
-4. Use the two fallback lists with distinct roles: `general-software` for repos whose purpose is clear but has no specialized home, `misc-explore` for repos not yet understood well enough to classify. Revisit `misc-explore` entries every maintenance pass.
+4. Use `everything-else` as the single fallback bucket for repos that fit no specialized list, whether their purpose is clear-but-unspecialized or not yet understood; record which case applies in the ledger `reason` and revisit `everything-else` entries every maintenance pass.
 5. Treat `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the taxonomy source of truth. Keep `references/taxonomy-rubric.md` aligned with that machine-readable taxonomy when changing official bucket semantics.
 
 ## Browser Fallback

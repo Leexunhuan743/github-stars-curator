@@ -65,7 +65,7 @@ When every drift entry is `localNotLive` with an empty `liveNotLocal` — the ty
 
 Do not apply an old full ledger without a fresh drift audit. Because GitHub's membership mutation replaces the managed-list set for each target repo, a stale full ledger can silently undo manual additions, removals, or reclassifications.
 
-If the user intentionally removed a repo from all managed taxonomy lists, do not force it back into a fallback bucket just to satisfy a full-ledger schema. Use a narrow incremental ledger for unrelated changes, or ask before converting the cloud removal into a local `misc-explore` or other fallback assignment.
+If the user intentionally removed a repo from all managed taxonomy lists, do not force it back into a fallback bucket just to satisfy a full-ledger schema. Use a narrow incremental ledger for unrelated changes, or ask before converting the cloud removal into a local `everything-else` or other fallback assignment.
 
 Recommended command:
 

@@ -43,7 +43,5 @@ lists:
     description: Deployable self-hosted services, home-lab apps, private web tools, APIs, and personal server software.
   - name: cloudflare-network-proxy
     description: "Cloudflare Workers and tunnels plus general proxy-network tooling: reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients (sing-box, Clash, Xray and similar)."
-  - name: general-software
-    description: Broad useful software that is understandable but not better captured by a stable specialized bucket.
-  - name: misc-explore
-    description: Temporary holding list for ambiguous, under-read, experimental, or still-learning repos that need later review.
+  - name: everything-else
+    description: "Fallback bucket for repos that fit no specialized list: clear-purpose software with no specialist home, and ambiguous or under-read repos still awaiting review."
