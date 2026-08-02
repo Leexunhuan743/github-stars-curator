@@ -22,69 +22,75 @@ This rubric starts from a practical, retrieval-oriented taxonomy that has alread
 - [Formal rules for Windows lists](#formal-rules-for-windows-lists)
 - [Formal rules for user-facing software lists](#formal-rules-for-user-facing-software-lists)
 - [Formal rules for reference and learning lists](#formal-rules-for-reference-and-learning-lists)
-- [Formal rules for publishing lists](#formal-rules-for-publishing-lists)
 - [Formal rules for deployment and network lists](#formal-rules-for-deployment-and-network-lists)
+- [Formal rules for languages, frameworks, and data lists](#formal-rules-for-languages-frameworks-and-data-lists)
+- [Formal rules for creative, business, scraping, and security lists](#formal-rules-for-creative-business-scraping-and-security-lists)
 - [Formal rules for fallback lists](#formal-rules-for-fallback-lists)
-- [Taxonomy scope and extension candidates](#taxonomy-scope-and-extension-candidates)
 
 ## Starter lists
 
 - `downloaders`: download managers, media downloaders, torrent clients, stream grabbers, and automated download tools
 - `cloud-drive-transfer-sync`: cloud drives, WebDAV and storage browsers, file transfer, device sending, remote copy, and folder sync tools
 - `clipboard-tools`: clipboard managers, clipboard history, pasteboard tools, cross-device copy/paste, and clipboard synchronization utilities
-- `music-players`: music players, streaming music clients, lyric-focused players, and music listening apps
-- `image-viewers`: image viewers, photo browsers, comic/image browsing apps, gallery clients, and image preview tools
-- `video-players`: video players, streaming video clients, danmu viewers, and watch-focused apps
-- `agent-harnesses`: agent harnesses, coding runtimes, ADEs, and multi-agent workspaces
-- `agent-skills-mcp`: agent skills, MCP servers, plugins, code intelligence, repo knowledge graphs, and AI content-generation tools
+- `media-players`: music, image, and video players: local players, streaming clients, gallery and comic browsers, danmu viewers, and watch-focused apps
+- `agent-tools`: agent harnesses, coding runtimes, agent skills, MCP servers, plugins, and agent-adjacent developer tooling
 - `ai-agents`: AI agents, agent platforms, autonomous workflows, and agent-oriented applications
-- `dev-tools`: developer tools, editors, local engineering utilities, and coding workflow tools
+- `dev-tools`: developer tools, editors, local engineering utilities, coding workflow tools, and static-site or publishing pipelines
 - `terminal`: terminal apps, TUIs, CLI-first utilities, SSH clients, and remote shell tools
 - `windows-tools`: Windows utilities, shell extensions, Explorer integrations, keymaps, thumbnails, and system tools
-- `desktop-apps`: general user-facing desktop apps, clipboard managers, chat export and archive tools, native utilities, and everyday GUI software
-- `reading-apps`: RSS readers, desktop reading apps, document readers, and subscription-based reading workflows
+- `desktop-apps`: general user-facing desktop apps, chat export and archive tools, native utilities, and everyday GUI software
+- `reading-notes`: RSS readers, desktop reading apps, document readers, read-later and ebook/manga/library servers, note-taking apps, markdown knowledge tools, and PKM systems
 - `pdf-document-tools`: PDF and document readers, editors, converters, OCR/compression tools, document viewers, and document-to-Markdown or AI-prep utilities
-- `note-software`: note-taking apps, markdown knowledge tools, PKM systems, scratchpads, and personal knowledge software
 - `references-guides`: reference collections, awesome lists, guides, tutorials, datasets, books, and learning resources
-- `publishing-site-pipelines`: doc-to-site, book-generation, static publishing, content-to-website, and automated publication pipelines
-- `self-hosted`: deployable self-hosted services, home-lab apps, private web tools, APIs, and personal server software
-- `cloudflare-network-proxy`: Cloudflare Workers, tunnels, reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients
+- `self-hosted`: deployable self-hosted services, home-lab apps, private web tools, APIs, personal server software, containers and orchestration, cloud-native infrastructure, and self-hosted chat platforms
+- `cloudflare-network-proxy`: Cloudflare Workers and tunnels plus general proxy-network tooling: reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients
+- `frameworks-libraries`: web and application frameworks, UI/component libraries, front-end libraries, programming languages, compilers, runtimes, and developer libraries
+- `data-ml-tools`: data science and ML frameworks, model inference infrastructure, databases, search engines, key-value and vector stores, ORMs, and data libraries
+- `game-3d-creative`: games, game engines and SDKs, 3D modeling and rendering, emulators, firmware, and generative creative tools
+- `design-assets`: fonts, icon sets, color themes, and reusable design resources
+- `business-apps`: business and industry software: CMS, invoicing, scheduling, e-commerce, BI, and support platforms
+- `web-scraping-data-collection`: scrapers, data collection APIs, and browser automation for data acquisition
+- `security-pentest-tools`: security tooling: OSINT, penetration testing, reverse engineering, and exploit frameworks
 - `everything-else`: fallback bucket for repos that fit no specialized list, including ambiguous repos still awaiting review
 
 ## Core front-rank buckets
 
-These twenty-three buckets are the front rank of this skill's taxonomy. When a repo fits one of them cleanly, prefer assigning it there before reaching for ad hoc or legacy buckets. The last two buckets are still formal, but they are controlled fallbacks rather than preferred destinations.
+These twenty-three buckets are the front rank of this skill's taxonomy. When a repo fits one of them cleanly, prefer assigning it there before reaching for ad hoc or legacy buckets. The last bucket is still formal, but it is the controlled fallback rather than a preferred destination.
 
 1. `downloaders`
 2. `cloud-drive-transfer-sync`
 3. `clipboard-tools`
-4. `music-players`
-5. `image-viewers`
-6. `video-players`
-7. `agent-harnesses`
-8. `agent-skills-mcp`
-9. `ai-agents`
-10. `dev-tools`
-11. `terminal`
-12. `windows-tools`
-13. `desktop-apps`
-14. `reading-apps`
-15. `pdf-document-tools`
-16. `note-software`
-17. `references-guides`
-18. `publishing-site-pipelines`
-19. `self-hosted`
-20. `cloudflare-network-proxy`
-21. `everything-else`
+4. `media-players`
+5. `agent-tools`
+6. `ai-agents`
+7. `dev-tools`
+8. `terminal`
+9. `windows-tools`
+10. `desktop-apps`
+11. `reading-notes`
+12. `pdf-document-tools`
+13. `references-guides`
+14. `self-hosted`
+15. `cloudflare-network-proxy`
+16. `frameworks-libraries`
+17. `data-ml-tools`
+18. `game-3d-creative`
+19. `design-assets`
+20. `business-apps`
+21. `web-scraping-data-collection`
+22. `security-pentest-tools`
+23. `everything-else`
 
 Ordering principle:
 
 1. File movement, acquisition, and clipboard flow: `downloaders`, `cloud-drive-transfer-sync`, `clipboard-tools`.
-2. Media consumption: `music-players`, `image-viewers`, `video-players`.
-3. AI, development, terminal, local system, and desktop app workflows: `agent-harnesses`, `agent-skills-mcp`, `ai-agents`, `dev-tools`, `terminal`, `windows-tools`, `desktop-apps`.
-4. Reading, document tooling, notes, and reference material: `reading-apps`, `pdf-document-tools`, `note-software`, `references-guides`.
-5. Publishing, self-hosted services, and network infrastructure: `publishing-site-pipelines`, `self-hosted`, `cloudflare-network-proxy`.
-6. Controlled fallback: `everything-else`.
+2. Media consumption: `media-players`.
+3. AI, development, terminal, local system, and desktop app workflows: `agent-tools`, `ai-agents`, `dev-tools`, `terminal`, `windows-tools`, `desktop-apps`.
+4. Reading, documents, notes, and reference material: `reading-notes`, `pdf-document-tools`, `references-guides`.
+5. Self-hosted services and network infrastructure: `self-hosted`, `cloudflare-network-proxy`.
+6. Languages, frameworks, libraries, and data tooling: `frameworks-libraries`, `data-ml-tools`.
+7. Creative, business, scraping, and security tooling: `game-3d-creative`, `design-assets`, `business-apps`, `web-scraping-data-collection`, `security-pentest-tools`.
+8. Controlled fallback: `everything-else`.
 
 ## How to choose lists
 
@@ -95,7 +101,7 @@ Good questions:
 - What is this repo mainly for?
 - What workflow would make me go looking for it again?
 - Is it a product, a library, a dataset, a reading list, a service, or a desktop tool?
-- Does it belong to a special retrieval lane like `self-hosted`, `reading-apps`, or `desktop-apps`?
+- Does it belong to a special retrieval lane like `self-hosted`, `reading-notes`, or `desktop-apps`?
 
 ## Ledger dimensions
 
@@ -139,65 +145,30 @@ If still unsure, place it in `everything-else` and record the uncertainty in the
 
 Do not create a separate `editors-ide` bucket. Traditional editors and local coding tools should be handled inside the existing development taxonomy.
 
-### `agent-harnesses`
+### `agent-tools`
 
 Definition:
 
-`Agent harnesses, coding runtimes, ADEs, and multi-agent workspaces.`
+`Agent harnesses, coding runtimes, agent skills, MCP servers, plugins, and agent-adjacent developer tooling.`
 
-Use this when the repository is mainly the environment for running or supervising coding agents.
+Use this when the repository is part of the toolchain around coding agents — whether it is the environment that runs them or the capabilities that extend them.
 
 Belongs here:
 
-- coding-agent harnesses,
-- ADEs and agent workspaces,
-- agent runtimes and agent shells,
-- multi-agent execution environments,
-- coding terminals designed around agent loops.
+- coding-agent harnesses, ADEs, agent runtimes, and multi-agent workspaces,
+- MCP servers, skills, agent plugins, and capability bridges for Codex, Claude Code, Cursor, and similar clients,
+- code intelligence, repo knowledge graphs, codebase indexing, and code-search tools,
+- AI tools for content generation (PPT, image, writing, research, report).
 
 Do not put these here:
 
-- MCP servers,
-- skills or plugin packs,
-- ordinary editors,
-- general local dev utilities.
+- ordinary editors and local dev utilities — use `dev-tools`,
+- broad end-user agent products — use `ai-agents`.
 
 Common confusions:
 
-- if it mainly adds capabilities to another agent, use `agent-skills-mcp`,
 - if it is mainly a traditional developer utility, use `dev-tools`,
-- if it is mainly an agent-facing product or workflow app rather than the runtime itself, consider `ai-agents`.
-
-### `agent-skills-mcp`
-
-Definition:
-
-`Agent skills, MCP servers, plugins, code intelligence, repo knowledge graphs, and AI content-generation tools.`
-
-Use this when the repository mainly extends what an agent can do rather than acting as the primary runtime, when it provides code intelligence or repo knowledge capabilities, or when it is primarily an AI content-generation capability.
-
-Belongs here:
-
-- MCP servers,
-- skills,
-- agent plugins,
-- capability bridges,
-- tool integrations for Codex, Claude Code, Cursor, and similar clients.
-- code graphs, graph RAG, repo knowledge graphs, and codebase indexing tools,
-- repository understanding, code search, and knowledge retrieval systems designed for AI or agent workflows,
-- AI tools for PPT, image, writing, research, report, and content generation.
-
-Do not put these here:
-
-- full agent harnesses,
-- standard editors,
-- general-purpose engineering tools with no agent-facing integration layer.
-
-Common confusions:
-
-- runtime shells and ADEs belong in `agent-harnesses`,
-- non-agent developer tools belong in `dev-tools`,
-- broad end-user agent products can belong in `ai-agents`.
+- if it is mainly an agent-facing product or workflow app rather than toolchain infrastructure, use `ai-agents`.
 
 ### `ai-agents`
 
@@ -222,13 +193,13 @@ Do not put these here:
 
 Common confusions:
 
-- runtimes and coding harnesses belong in `agent-harnesses`,
-- capabilities and integrations belong in `agent-skills-mcp`,
-- AI content-generation tools belong in `agent-skills-mcp`.
+- runtimes and coding harnesses belong in `agent-tools`,
+- capabilities and integrations belong in `agent-tools`,
+- AI content-generation tools belong in `agent-tools`.
 
 ### `dev-tools`
 
-Use this as the default bucket for traditional development tools. This is where editors, documentation browsers, code-processing tools, and local engineering helpers should go when they are not primarily AI-agent infrastructure.
+Use this as the default bucket for traditional development tools. This is where editors, documentation browsers, code-processing tools, local engineering helpers, and static-site or publishing pipelines should go when they are not primarily AI-agent infrastructure.
 
 Belongs here:
 
@@ -236,61 +207,58 @@ Belongs here:
 - offline documentation browsers,
 - code and text processing tools,
 - local workflow helpers for engineering work,
+- static-site generators, doc-to-site tools, and publishing pipelines (hugo, docs builders),
 - developer-facing utilities that are not primarily note-taking products.
 
 If a repo is development-related, classify it in this order:
 
-1. If it is mainly an environment for running agents, use `agent-harnesses`.
-2. If it mainly extends agent capabilities, use `agent-skills-mcp`.
-3. Otherwise, default to `dev-tools`.
+1. If it is part of the agent toolchain, use `agent-tools`.
+2. Otherwise, default to `dev-tools`.
 
 For text editors, use this rule:
 
 - development-oriented text editors go to `dev-tools`,
-- note-taking or markdown knowledge editors go to `note-software`,
+- note-taking or markdown knowledge editors go to `reading-notes`,
 - general desktop writing tools go to `desktop-apps`.
 
 Common confusions:
 
-- if the product is really a note system, use `note-software`,
+- if the product is really a note system, use `reading-notes`,
 - if the product is a broad desktop app with no clear dev workflow focus, use `desktop-apps`,
-- if the repo is clearly agent-runtime or MCP related, use the AI buckets above.
+- if the repo is clearly agent-runtime or MCP related, use `agent-tools`.
 
 ## Formal rules for reading and document lists
 
-Use three reading and document-oriented lanes:
+Use two reading and document-oriented lanes:
 
-1. `reading-apps` for subscription reading, ordinary desktop reading tools, and self-hosted read-later or reading-library servers,
-2. `pdf-document-tools` for PDF/document editing, conversion, OCR, compression, viewing components, and document-to-Markdown or AI-prep pipelines,
-3. `note-software` for notes, markdown knowledge, and PKM-style tools.
+1. `reading-notes` for reading workflows (subscription readers, desktop reading apps, self-hosted read-later and ebook/manga/library servers) and knowledge workflows (notes, markdown knowledge, PKM),
+2. `pdf-document-tools` for PDF/document editing, conversion, OCR, compression, viewing components, and document-to-Markdown or AI-prep pipelines.
 
 Do not create a broad catch-all reading bucket beyond these lanes.
 
-### `reading-apps`
+### `reading-notes`
 
 Definition:
 
-`RSS readers, desktop reading apps, document readers, subscription-based reading workflows, and self-hosted read-later, ebook, manga, or library servers.`
+`RSS readers, desktop reading apps, document readers, read-later and ebook/manga/library servers, note-taking apps, markdown knowledge tools, and PKM systems.`
 
-Use this when the main workflow is reading content rather than writing notes or managing a personal knowledge base — including when the reading service is self-hosted.
+Use this when the main workflow is consuming content (reading, subscribing, archiving reading material) or capturing and organizing knowledge (notes, PKM). Reading and note tools are one lane because they are frequently the same product and the same retrieval question: "where do I consume and keep content?".
 
 Belongs here:
 
-- RSS and feed readers,
-- newsletter and subscription readers,
-- ebook readers and document-reading apps,
-- desktop reading apps,
-- single-user manga or novel readers when the main experience is simply reading,
-- self-hosted read-later services, bookmark archives, ebook/manga servers, and reading libraries.
+- RSS and feed readers, newsletter and subscription readers,
+- ebook readers and document-reading apps, single-user manga or novel readers,
+- self-hosted read-later services, bookmark archives, ebook/manga servers, and reading libraries,
+- note-taking apps, markdown knowledge tools, PKM systems, memo and scratchpad apps, personal knowledge bases.
 
-Do not use this for note-taking systems, PKM tools, PDF/document processing suites, or generic self-hosted services without a reading workflow.
+Do not use this for PDF/document processing suites, generic deployable services without a reading/archive workflow, or developer editors.
 
 Common confusions:
 
-- if the main workflow is collecting or structuring personal knowledge, use `note-software`,
-- if the main workflow is editing, converting, OCR-ing, compressing, preparing, or programmatically viewing PDF/document files, use `pdf-document-tools`,
-- if the repo is a generic deployable service with no reading/archive workflow, use `self-hosted`,
-- if it is a writing-first tool rather than a reading-first tool, do not force it here.
+- if the main workflow is PDF/document conversion, OCR, compression, or repair, use `pdf-document-tools`,
+- if the repo is a generic deployable service with no reading or knowledge workflow, use `self-hosted`,
+- if it is mainly a developer editor or documentation browser, use `dev-tools`,
+- if it is a writing-first general desktop tool, use `desktop-apps`.
 
 ### `pdf-document-tools`
 
@@ -309,40 +277,16 @@ Belongs here:
 - document-to-Markdown, document-to-HTML, or document-to-AI-prep converters,
 - download helpers only when the durable retrieval intent is PDF/document handling rather than general downloading.
 
-Use this alongside `reading-apps` when the app is both a user-facing document reader and a PDF/document toolkit. Use it alongside `dev-tools` when the repo is a developer-facing document conversion library.
+Use this alongside `reading-notes` when the app is both a user-facing document reader and a PDF/document toolkit. Use it alongside `dev-tools` when the repo is a developer-facing document conversion library.
 
 Do not use this for general note-taking, plain Markdown editors, static-site publishing systems, or ordinary ebook/RSS readers unless PDF/document handling is the main retrieval intent.
 
 Common confusions:
 
-- if the main workflow is simply reading ebooks, feeds, or articles, use `reading-apps`,
-- if the main workflow is capturing notes or managing knowledge, use `note-software`,
-- if the main workflow is publishing documents to a website, book, deck, or public report, use `publishing-site-pipelines`,
+- if the main workflow is simply reading ebooks, feeds, or articles, use `reading-notes`,
+- if the main workflow is capturing notes or managing knowledge, use `reading-notes`,
+- if the main workflow is publishing documents to a website, book, deck, or public report, use `dev-tools`,
 - if the main workflow is downloading files and document handling is incidental, use `downloaders`.
-
-### `note-software`
-
-Definition:
-
-`Note-taking apps, markdown knowledge tools, PKM systems, scratchpads, and personal knowledge software.`
-
-Use this when the main workflow is capturing, organizing, linking, or managing knowledge.
-
-Belongs here:
-
-- note-taking apps,
-- markdown knowledge tools,
-- PKM systems,
-- memo and scratchpad apps,
-- personal knowledge bases.
-
-Use this bucket for markdown-first knowledge tools as well as broader note-taking and PKM systems.
-
-Common confusions:
-
-- if the main experience is reading rather than capturing and organizing knowledge, use `reading-apps`,
-- if the main workflow is PDF/document conversion, OCR, compression, or repair, use `pdf-document-tools`,
-- if it is mainly a developer editor or documentation browser, use `dev-tools`.
 
 ## Formal rules for media and download lists
 
@@ -370,84 +314,32 @@ Do not use this as the primary bucket for players, cloud-drive managers, or gene
 
 Common confusions:
 
-- if the main product is listening, use `music-players`,
-- if the main product is watching, use `video-players`,
+- if the main product is media playback of any kind (listening, watching, browsing), use `media-players`,
 - if the main product is a cloud-drive, transfer, or sync manager, use `cloud-drive-transfer-sync`.
 
-### `music-players`
+### `media-players`
 
 Definition:
 
-`Music players, streaming music clients, lyric-focused players, and music listening apps.`
+`Music, image, and video players: local players, streaming clients, gallery and comic browsers, danmu viewers, and watch-focused apps.`
 
-Use this when the main workflow is listening to music.
-
-Belongs here:
-
-- local music players,
-- streaming music clients,
-- desktop lyric players,
-- self-hosted music playback clients,
-- album, playlist, and library-oriented music apps.
-
-Do not use this for music tag editors, sync/download tools, or media services unless playback is the main product surface.
-
-Common confusions:
-
-- if download is the real value, use `downloaders`,
-- if the main workflow is browsing photos, illustrations, galleries, or image files, use `image-viewers`,
-- if the app is a broader file, cloud-media, transfer, or sync hub, consider pairing or preferring `cloud-drive-transfer-sync`,
-- if it is mainly a tag editor or library utility without a real listening surface, do not force it here.
-
-### `image-viewers`
-
-Definition:
-
-`Image viewers, photo browsers, comic/image browsing apps, gallery clients, and image preview tools.`
-
-Use this when the main workflow is browsing, previewing, or viewing image-first content.
+Use this when the main workflow is consuming media — listening to music, watching video, or browsing image-first content. Playback or browsing is the product surface.
 
 Belongs here:
 
-- local image viewers and photo browsers,
-- comic, manga, archive, or folder image viewers when image browsing is the main app experience,
-- gallery and illustration clients such as Pixiv-style browsers,
-- image preview tools and lightweight image format viewers,
-- apps whose video support is secondary to an image-viewing product.
+- local music players, streaming music clients, lyric players,
+- video players, streaming video clients, danmu players, watch-first anime/Bilibili/media frontends,
+- image viewers, photo browsers, comic/manga/archive/folder viewers, gallery clients (Pixiv-style), image preview tools,
+- album, playlist, and library-oriented media apps.
 
-Do not use this for full image editors, drawing tools, prompt collections, image-generation skills, or gallery/media downloaders unless viewing is the primary user intent.
-
-Common confusions:
-
-- if the main workflow is editing or creating images, use `desktop-apps`, `everything-else`, or a more specific future bucket,
-- if the main workflow is downloading galleries/media, use `downloaders`,
-- if the main workflow is reading ebooks, PDFs, or text-heavy documents, use `reading-apps`,
-- if the app is primarily a watch-focused video player with optional image support, use `video-players`.
-
-### `video-players`
-
-Definition:
-
-`Video players, streaming video clients, danmu viewers, and watch-focused apps.`
-
-Use this when the main workflow is watching video.
-
-Belongs here:
-
-- local video players,
-- streaming video clients,
-- danmu players,
-- watch-first anime, Bilibili, or media frontends,
-- playback-focused apps with subtitles, tracks, and watch history.
-
-Do not use this for pure download tools, resource aggregators, or general-purpose site helpers unless watching is the primary user intent.
+Do not use this for downloaders, tag editors, media servers without a playback surface, image editors, or content-generation tools.
 
 Common confusions:
 
-- if the real workflow is acquisition or scraping, use `downloaders`,
-- if the product is primarily an image/photo/comic viewer with optional video support, use `image-viewers`,
-- if the app is mainly a site helper or utility, use a more fitting broad bucket such as `everything-else`,
-- if the product mainly manages storage, transfer, or sync rather than playback, use `cloud-drive-transfer-sync`.
+- if the real workflow is acquisition, scraping, or downloading media, use `downloaders`,
+- if the main workflow is editing or creating images, use `desktop-apps` or `game-3d-creative` for generative tools,
+- if the product mainly manages storage, transfer, or sync rather than playback, use `cloud-drive-transfer-sync`,
+- if it is a self-hosted media library server (Plex/Jellyfin-style), use `self-hosted`.
 
 ## Formal rules for cloud, transfer, and sync lists
 
@@ -531,7 +423,7 @@ Do not use this for ordinary developer editors, general desktop tools, or networ
 
 Common confusions:
 
-- if the repo is primarily a coding-agent runtime, use `agent-harnesses`,
+- if the repo is primarily a coding-agent runtime, use `agent-tools`,
 - if the repo is primarily a broad remote-management or network product rather than a terminal workflow, consider `everything-else` or a more specific networking bucket,
 - classify SSH clients and remote shell tools directly in `terminal`.
 
@@ -591,7 +483,7 @@ Common confusions:
 - if the main value is Windows shell, Explorer, context menu, thumbnail, keymap, or system-layer integration, use `windows-tools`,
 - if the main value is clipboard history, pasteboard management, or cross-device copy/paste, use `clipboard-tools`,
 - if the app is primarily a developer utility, use `dev-tools`,
-- if it is mainly notes, markdown knowledge, or PKM, use `note-software`,
+- if it is mainly notes, markdown knowledge, or PKM, use `reading-notes`,
 - if it is useful software but not specifically a desktop app or native GUI utility, use `everything-else`.
 
 ## Formal rules for reference and learning lists
@@ -616,38 +508,10 @@ Do not use this for runnable applications, developer tools, note-taking software
 
 Common confusions:
 
-- if it is a tool for writing, publishing, or hosting docs, use `publishing-site-pipelines`,
-- if it is a note-taking or PKM product, use `note-software`,
+- if it is a tool for writing, publishing, or hosting docs, use `dev-tools`,
+- if it is a note-taking or PKM product, use `reading-notes`,
 - if it is a developer utility with reference features, use `dev-tools`,
 - if the repo is the knowledge itself rather than a tool that manages knowledge, use `references-guides`.
-
-## Formal rules for publishing lists
-
-### `publishing-site-pipelines`
-
-Definition:
-
-`Doc-to-site, book-generation, static publishing, content-to-website, and automated publication pipelines.`
-
-Use this when the repository's main workflow is turning source material into a publishable site, book, documentation portal, generated report, or recurring public content feed.
-
-Belongs here:
-
-- doc-to-site and markdown-to-site pipelines,
-- book, ebook, PDF, or long-form publication generators,
-- static-site publishing workflows,
-- content-to-website systems,
-- automated news, report, or knowledge-site publication pipelines,
-- tools that prepare parsed documents, notes, or generated content for web publishing.
-
-Do not use this for raw reference material, ordinary note-taking apps, coding-agent harnesses, or general CMS-like apps unless publishing is the main retrieval intent.
-
-Common confusions:
-
-- if the repo is mainly the content itself, use `references-guides`,
-- if the repo is mainly a personal note or PKM app, use `note-software`,
-- if the repo is mainly an agent or research product that can produce reports, use `ai-agents` or `agent-skills-mcp`,
-- if the repo is a deployable web service with publishing as only one feature, use `self-hosted` plus the closest functional bucket.
 
 ## Formal rules for deployment and network lists
 
@@ -655,9 +519,9 @@ Common confusions:
 
 Definition:
 
-`Deployable self-hosted services, home-lab apps, private web tools, APIs, and personal server software.`
+`Deployable self-hosted services, home-lab apps, private web tools, APIs, personal server software, containers and orchestration, cloud-native infrastructure, and self-hosted chat platforms.`
 
-Use this when the repository is mainly something the user can run as their own service, server, API, private web app, NAS app, or home-lab tool, and no more specific front-rank bucket captures the core workflow better.
+Use this when the repository is mainly something the user can run as their own service, server, API, private web app, NAS app, home-lab tool, or infrastructure component, and no more specific front-rank bucket captures the core workflow better.
 
 Belongs here:
 
@@ -666,18 +530,20 @@ Belongs here:
 - private APIs and backend services,
 - personal dashboards and server-side tools,
 - deployable utilities intended to replace a hosted SaaS,
-- Docker-ready or single-binary services where the service itself is the product.
+- Docker-ready or single-binary services where the service itself is the product,
+- containers, orchestration, and cloud-native infrastructure (kubernetes, ingress controllers, terraform, observability operators),
+- self-hosted chat/IM/VoIP platforms (Rocket.Chat, Matrix servers).
 
 Do not use this merely because a project supports Docker, Vercel, Cloudflare Workers, or server deployment. Use the repo's primary user intent first.
 
 Common confusions:
 
-- self-hosted RSS readers and ordinary feed readers belong in `reading-apps`,
-- self-hosted read-later, bookmark, manga, comic, or ebook libraries belong in `reading-apps`,
-- self-hosted note or PKM systems belong in `note-software`,
+- self-hosted RSS readers, read-later, ebook/manga, and reading libraries belong in `reading-notes`,
+- self-hosted note or PKM systems belong in `reading-notes`,
 - self-hosted cloud drives, WebDAV tools, file sharing, R2/S3 browsers, and transfer tools belong in `cloud-drive-transfer-sync`,
 - Cloudflare tunnel, proxy, relay, edge gateway, and proxy subscription projects belong in `cloudflare-network-proxy`,
-- AI-agent services belong first in the relevant AI bucket if agent behavior is the main product.
+- AI-agent services belong first in the relevant AI bucket if agent behavior is the main product,
+- a self-hosted media library server with a playback surface (Plex/Jellyfin-style) can pair `media-players` with `self-hosted`.
 
 ### `cloudflare-network-proxy`
 
@@ -704,7 +570,7 @@ Common confusions:
 
 - Cloudflare-hosted file managers, R2 browsers, WebDAV, and storage tools belong in `cloud-drive-transfer-sync`,
 - Cloudflare-hosted ordinary web apps belong in `self-hosted` or their functional bucket,
-- Cloudflare-hosted news or publication projects belong in `publishing-site-pipelines` when publishing is the main workflow,
+- Cloudflare-hosted news or publication projects belong in `dev-tools` when publishing is the main workflow,
 - terminal or SSH clients belong in `terminal`,
 - Windows-only proxy clients can use `windows-tools` as a secondary list only when Windows integration is a major retrieval reason.
 
@@ -735,22 +601,87 @@ Common confusions:
 - deployable services belong in `self-hosted`,
 - revisit `everything-else` entries during maintenance passes; classify repos that have become understandable since the last pass.
 
-## Taxonomy scope and extension candidates
+## Formal rules for languages, frameworks, and data lists
 
-The bundled taxonomy is scoped to a personal-software + AI-tooling star set. A manually labeled 500-repo probe of GitHub's top-starred repositories (star bands 5k-100k+) leaves ~38% of repos with no honest home — web/UI frameworks and libraries, languages, data/ML infra, databases, cloud-native tooling, games/3D, design assets, business apps, security tooling, scrapers, chat platforms. The heavy misplacement into `dev-tools`/`self-hosted`/`references-guides` that a keyword probe showed is exactly the failure this section prevents.
+### `frameworks-libraries`
 
-Eleven extension buckets cover that gap; with all of them active the probe coverage rises to ~98% (remaining stragglers are long tails: OS kernels, smart-home hubs, blockchain nodes, non-software repos). Machine-readable definitions live in `references/taxonomy-extension-candidates.yaml` — copy the buckets this star set actually needs into `<workspace>/taxonomy.yaml` (name, description, and a slot in the list order) before classifying; do not force such repos into existing broad buckets.
+Definition:
 
-- `web-frameworks-ui-libraries` — web and application frameworks, UI/component libraries, front-end libraries, templates, admin panels (react, vue, bootstrap, antd, tailwind, django, gin, next.js, electron, tauri, flutter, d3, mermaid, Leaflet)
-- `programming-languages-runtimes` — languages, compilers, runtimes, toolchains (go, TypeScript, rust, node, bun, julia, Bend, triton)
-- `data-ml-tools` — data science/ML frameworks, model inference infra, data libraries (pandas, tensorflow, transformers, vllm, ollama, llama.cpp, opencv, langchain)
-- `databases-data-stores` — databases, search engines, key-value/vector stores, ORMs, drivers (redis, elasticsearch, ClickHouse, milvus, prisma)
-- `cloud-native-infra` — containers, orchestration, cloud-native and observability infra (kubernetes, ingress-nginx, cadvisor, terraform, prometheus-operator, airflow). Self-hosted monitoring apps that ship as products still belong in `self-hosted`
-- `game-3d-creative` — games, engines/SDKs, 3D modeling/rendering, emulators, firmware, generative creative tools (DOOM, godot, bevy, blender, source-sdk, RPCS3, stable-diffusion-webui)
-- `design-assets` — fonts, icon sets, themes, design resources (FiraCode, Inter, Font-Awesome, catppuccin)
-- `business-apps` — CMS, invoicing, scheduling, e-commerce, BI, support platforms (keystonejs, invoiceninja, cal.diy, discourse, metabase, mall)
-- `chat-communication` — chat/IM/VoIP platforms (Rocket.Chat, fluxer). Desktop chat clients without a server component stay in `desktop-apps`
-- `web-scraping-data-collection` — scrapers and data-acquisition automation (firecrawl, crawl4ai, instagrapi). Do not put security tooling here — it belongs in `security-pentest-tools`
-- `security-pentest-tools` — OSINT, penetration testing, reverse engineering, exploit frameworks (sherlock, bettercap, x64dbg, cutter, PayloadsAllTheThings). Separated from scraping because the two retrieval questions differ
+`Web and application frameworks, UI/component libraries, front-end libraries, programming languages, compilers, runtimes, and developer libraries.`
 
-Activate at most the buckets the star set actually needs, keep the total under the 32-list cap, and keep this rubric's prose aligned with the workspace `taxonomy.yaml` after extension.
+Use this when the repo is a building block developers depend on — a framework, library, language, or runtime — rather than an end-user tool or a workflow utility.
+
+Belongs here:
+
+- web front- and back-end frameworks (react, vue, bootstrap, django, gin, next.js),
+- UI/component libraries, CSS frameworks, template engines,
+- chart, map, whiteboard, and data-visualization libraries (d3, mermaid, Leaflet),
+- programming languages, compilers, runtimes, and language toolchains (go, TypeScript, rust, node, bun).
+
+Do not use this for developer utilities that ship as tools (editors, CLIs) — those belong in `dev-tools` or `terminal`.
+
+### `data-ml-tools`
+
+Definition:
+
+`Data science and machine learning frameworks, model inference infrastructure, databases, search engines, key-value and vector stores, ORMs, and data libraries.`
+
+Use this when the repo is data or model infrastructure: frameworks, inference engines, model releases, or data stores.
+
+Belongs here:
+
+- ML frameworks and model weights (tensorflow, transformers, DeepSeek-R1),
+- inference engines and local model runners (vllm, ollama, llama.cpp, exo),
+- data science libraries (pandas, sktime, pyod),
+- databases, search engines, key-value/vector stores, ORMs, and drivers (redis, elasticsearch, ClickHouse, milvus, prisma).
+
+Do not use this for AI end-user apps (use `ai-agents`) or data pipelines that ship as deployable services (use `self-hosted`).
+
+## Formal rules for creative, business, scraping, and security lists
+
+### `game-3d-creative`
+
+Definition:
+
+`Games, game engines and SDKs, 3D modeling and rendering, emulators, firmware, and generative creative tools.`
+
+Use this when the repo is a game, engine, 3D/creative tool, emulator, custom firmware, or generative creative application.
+
+Belongs here:
+
+- games and game source releases (DOOM),
+- game engines and SDKs (godot, bevy, source-sdk),
+- 3D modeling/rendering (blender, openscad), emulators (RPCS3), custom firmware (Atmosphere),
+- generative creative tools (stable-diffusion-webui, manim, freemocap).
+
+### `design-assets`
+
+Definition:
+
+`Fonts, icon sets, color themes, and reusable design resources.`
+
+Use this for assets designers and developers drop into their work (FiraCode, Inter, Font-Awesome, catppuccin). Not for design applications — those belong in `desktop-apps` or `game-3d-creative`.
+
+### `business-apps`
+
+Definition:
+
+`Business and industry software: CMS, invoicing, scheduling, e-commerce, BI, and support platforms.`
+
+Use this for software built around a business workflow (keystonejs, invoiceninja, cal.diy, discourse, metabase, mall). Desktop clients of such platforms stay in `desktop-apps`; deployable instances can pair `self-hosted`.
+
+### `web-scraping-data-collection`
+
+Definition:
+
+`Scrapers, data collection APIs, and browser automation for data acquisition.`
+
+Use this when the repo acquires data from the web (firecrawl, crawl4ai, instagrapi). Do not put security tooling here — it belongs in `security-pentest-tools`.
+
+### `security-pentest-tools`
+
+Definition:
+
+`Security tooling: OSINT, penetration testing, reverse engineering, and exploit frameworks.`
+
+Use this when the repo is security research or offensive tooling (sherlock, bettercap, x64dbg, cutter, PayloadsAllTheThings). Separated from scraping because the two retrieval questions differ.

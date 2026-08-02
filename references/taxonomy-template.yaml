@@ -7,39 +7,43 @@ lists:
     description: Cloud drives, WebDAV and storage browsers, file transfer, device sending, remote copy, and folder sync tools.
   - name: clipboard-tools
     description: Clipboard managers, clipboard history, pasteboard tools, cross-device copy/paste, and clipboard synchronization utilities.
-  - name: music-players
-    description: Music players, streaming music clients, lyric-focused players, and music listening apps.
-  - name: image-viewers
-    description: Image viewers, photo browsers, comic/image browsing apps, gallery clients, and image preview tools.
-  - name: video-players
-    description: Video players, streaming video clients, danmu viewers, and watch-focused apps.
-  - name: agent-harnesses
-    description: Agent harnesses, coding runtimes, ADEs, and multi-agent workspaces.
-  - name: agent-skills-mcp
-    description: Agent skills, MCP servers, plugins, code intelligence, repo knowledge graphs, and AI content-generation tools.
+  - name: media-players
+    description: "Music, image, and video players: local players, streaming clients, gallery and comic browsers, danmu viewers, and watch-focused apps."
+  - name: agent-tools
+    description: "Agent harnesses, coding runtimes, agent skills, MCP servers, plugins, and agent-adjacent developer tooling."
   - name: ai-agents
     description: AI agents, agent platforms, autonomous workflows, and agent-oriented applications.
   - name: dev-tools
-    description: Developer tools, editors, local engineering utilities, and coding workflow tools.
+    description: "Developer tools, editors, local engineering utilities, coding workflow tools, and static-site or publishing pipelines."
   - name: terminal
     description: Terminal apps, TUIs, CLI-first utilities, SSH clients, and remote shell tools.
   - name: windows-tools
     description: Windows utilities, shell extensions, Explorer integrations, keymaps, thumbnails, and system tools.
   - name: desktop-apps
-    description: General user-facing desktop apps, clipboard managers, chat export and archive tools, native utilities, and everyday GUI software.
-  - name: reading-apps
-    description: "RSS readers, desktop reading apps, document readers, subscription-based reading workflows, and self-hosted read-later, ebook, manga, or library servers."
+    description: General user-facing desktop apps, chat export and archive tools, native utilities, and everyday GUI software.
+  - name: reading-notes
+    description: "RSS readers, desktop reading apps, document readers, read-later and ebook/manga/library servers, note-taking apps, markdown knowledge tools, and PKM systems."
   - name: pdf-document-tools
     description: PDF and document readers, editors, converters, OCR/compression tools, document viewers, and document-to-Markdown or AI-prep utilities.
-  - name: note-software
-    description: Note-taking apps, markdown knowledge tools, PKM systems, scratchpads, and personal knowledge software.
   - name: references-guides
     description: Reference collections, awesome lists, guides, tutorials, datasets, books, and learning resources.
-  - name: publishing-site-pipelines
-    description: Doc-to-site, book-generation, static publishing, content-to-website, and automated publication pipelines.
   - name: self-hosted
-    description: Deployable self-hosted services, home-lab apps, private web tools, APIs, and personal server software.
+    description: "Deployable self-hosted services, home-lab apps, private web tools, APIs, personal server software, containers and orchestration, cloud-native infrastructure, and self-hosted chat platforms."
   - name: cloudflare-network-proxy
     description: "Cloudflare Workers and tunnels plus general proxy-network tooling: reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients (sing-box, Clash, Xray and similar)."
+  - name: frameworks-libraries
+    description: "Web and application frameworks, UI/component libraries, front-end libraries, programming languages, compilers, runtimes, and developer libraries (react, vue, bootstrap, django, go, TypeScript, rust, d3, mermaid)."
+  - name: data-ml-tools
+    description: "Data science and machine learning frameworks, model inference infrastructure, databases, search engines, key-value and vector stores, ORMs, and data libraries (pandas, tensorflow, vllm, redis, elasticsearch, prisma)."
+  - name: game-3d-creative
+    description: "Games, game engines and SDKs, 3D modeling and rendering, emulators, firmware, and generative creative tools (DOOM, godot, blender, RPCS3, stable-diffusion-webui)."
+  - name: design-assets
+    description: Fonts, icon sets, color themes, and reusable design resources (FiraCode, Inter, Font-Awesome, catppuccin).
+  - name: business-apps
+    description: "Business and industry software: CMS, invoicing, scheduling, e-commerce, BI, and support platforms (keystonejs, invoiceninja, cal.diy, metabase, mall)."
+  - name: web-scraping-data-collection
+    description: Scrapers, data collection APIs, and browser automation for data acquisition (firecrawl, crawl4ai, instagrapi).
+  - name: security-pentest-tools
+    description: "Security tooling: OSINT, penetration testing, reverse engineering, and exploit frameworks (sherlock, bettercap, x64dbg, PayloadsAllTheThings)."
   - name: everything-else
     description: "Fallback bucket for repos that fit no specialized list: clear-purpose software with no specialist home, and ambiguous or under-read repos still awaiting review."
