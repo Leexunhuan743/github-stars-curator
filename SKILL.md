@@ -17,7 +17,7 @@ Prefer this skill when the user says things like:
 
 Read references only when the task needs them:
 
-- Read `references/glossary.md` for the meaning of the skill's leading words: ledger, drift, planHash, writeback, narrow incremental ledger.
+- Read `references/glossary.md` for the meaning of the skill's leading words: ledger, drift, planHash, writeback, narrow incremental ledger, unmanaged list.
 - Read `references/workflow.md` for inventory refreshes, README fetching, local corpus maintenance, or end-to-end runs.
 - Read `references/taxonomy-rubric.md` when classifying repositories, refining buckets, or explaining list placement.
 - Read `references/github-graphql-notes.md` only before online plan/apply work or browser fallback.
@@ -160,13 +160,13 @@ Done when the summary reflects the current ledger, and every ledger entry matche
 Run `scripts/apply_user_lists.py` in offline plan mode first. This validates the ledger against the managed taxonomy without contacting GitHub.
 
 ```bash
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/classification-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-23bucket-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
 ```
 
 Then run online plan mode. This checks existing GitHub lists, stale descriptions, missing lists, and current list membership before mutation. Review the generated `planHash`.
 
 ```bash
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/classification-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-23bucket-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
 ```
 
 Online plan reads live GitHub data and writes a membership cache; `--use-membership-cache` is only for a deliberately reviewed rerun (details in `references/workflow.md`, List sync safety).
@@ -176,7 +176,7 @@ Before applying, run an online plan or `scripts/audit_cloud_drift.py` to compare
 Then apply the reviewed plan:
 
 ```bash
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/classification-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-23bucket-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
 ```
 
 Apply preserves existing GitHub lists outside the managed taxonomy by default and rejects unknown list names; `--replace-all-lists` and `--allow-unknown-lists` are deliberate opt-outs documented in `references/workflow.md` (List sync safety).

@@ -45,7 +45,7 @@ After writeback, merge the narrow ledger back into the full ledger record with `
 
 ## Cloud drift audit and reconciliation mode
 
-Use this mode before every online writeback. Do not rely on the user to remember whether they changed GitHub Stars lists manually in the GitHub UI, browser, mobile app, or another client after the local ledger was last synced.
+Use this mode before every online writeback. The user cannot be relied on to report manual edits; check for cloud drift proactively by reading live memberships and comparing them with the local ledger.
 
 Principle: live GitHub list membership is the newest fact when it differs from the local ledger. The local ledger is a working record, not permission to overwrite cloud edits.
 
@@ -70,7 +70,7 @@ If the user intentionally removed a repo from all managed taxonomy lists, do not
 Recommended command:
 
 ```bash
-python scripts/audit_cloud_drift.py --mapping "<workspace>/star-readmes/classification-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --all-inventory
+python scripts/audit_cloud_drift.py --mapping "<workspace>/star-readmes/complete-23bucket-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --all-inventory
 ```
 
 The command exits zero when there is no drift and non-zero when drift is found. A non-zero drift result is not a script failure; it is a stop-and-reconcile signal before any apply.
