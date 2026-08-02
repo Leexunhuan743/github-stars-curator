@@ -2,13 +2,7 @@
 
 ## Preferred tooling
 
-Prefer `gh` for this skill because it is more scriptable, easier to diff, and easier to rerun safely than a browser-only workflow.
-
-Use the browser only when:
-
-- `gh` is missing,
-- the auth scope is insufficient and cannot be refreshed in CLI,
-- the mutation or session behavior blocks the CLI route.
+Use `gh` for this skill because it is more scriptable, easier to diff, and easier to rerun safely.
 
 ## Auth checks
 

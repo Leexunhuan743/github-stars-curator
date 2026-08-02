@@ -1,6 +1,6 @@
 ---
 name: github-stars-curator
-description: Curate GitHub starred repositories into stable, meaningful user lists by detecting new stars, downloading READMEs into a local corpus, enriching per-repo metadata, refining taxonomy decisions, and syncing the final mapping back to GitHub via gh or a browser fallback. Use this when a user wants their starred repos sorted into lists, a recent batch of new stars filed incrementally, or their star-list taxonomy reviewed and refined.
+description: Curate GitHub starred repositories into stable, meaningful user lists by detecting new stars, downloading READMEs into a local corpus, enriching per-repo metadata, refining taxonomy decisions, and syncing the final mapping back to GitHub via gh. Use this when a user wants their starred repos sorted into lists, a recent batch of new stars filed incrementally, or their star-list taxonomy reviewed and refined.
 ---
 
 # GitHub Stars Curator
@@ -20,7 +20,7 @@ Read references only when the task needs them:
 - Read `references/glossary.md` for the meaning of the skill's leading words: ledger, drift, planHash, writeback, narrow incremental ledger, unmanaged list.
 - Read `references/workflow.md` for inventory refreshes, README fetching, local corpus maintenance, or end-to-end runs.
 - Read `references/taxonomy-rubric.md` when classifying repositories, refining buckets, or explaining list placement.
-- Read `references/github-graphql-notes.md` only before online plan/apply work or browser fallback.
+- Read `references/github-graphql-notes.md` before online plan/apply work.
 - Use `references/taxonomy-template.yaml` as the bundled machine-readable taxonomy. If `<workspace>/taxonomy.yaml` exists, scripts use that workspace taxonomy instead.
 
 ## Taxonomy Scope
@@ -29,12 +29,12 @@ The bundled 23-bucket taxonomy is a general-purpose classification: personal sof
 
 ## Preconditions
 
-1. Prefer `gh` first. Use the browser only if `gh` is unavailable, under-scoped, or cannot perform a required mutation.
+1. Use `gh` for all GitHub operations.
 2. Verify `gh auth status` before any writeback. For GitHub star list mutations, the token needs a scope set that includes `user`.
 3. Treat the local corpus and ledger as the working memory, but treat GitHub as the final source of truth for list membership after writeback.
 4. Assume classification is iterative. New or ambiguous repos can stay in the `everything-else` fallback bucket until the next pass.
 5. Before any online writeback, proactively check for cloud drift even if the user did not mention manual edits. Read live GitHub memberships, compare them with the local ledger, and treat live memberships as newer when they differ. Reconcile the local plan with cloud drift, or use a narrow incremental ledger that preserves each target repo's current live lists. Do not apply an old full ledger over possible manual cloud edits.
-6. If the user asks for local-only skill work, taxonomy design, or offline review, do not access GitHub or the browser.
+6. If the user asks for local-only skill work, taxonomy design, or offline review, do not access GitHub.
 7. `scripts/apply_user_lists.py` requires PyYAML. If it is missing, install it with `python -m pip install pyyaml`.
 8. Ledger shape is validated from `references/classification-ledger.schema.json`; keep that schema as the source for assignment field rules.
 9. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (see `references/glossary.md`) are preserved by default; when the online plan or drift audit reveals them, ask the user whether to delete them — never delete without explicit approval (see `references/workflow.md`, Cleaning up unmanaged lists).
@@ -207,14 +207,6 @@ Done when the report answers every bullet above, including an explicit "none" fo
    - what future search question it answers.
 4. Use `everything-else` as the single fallback bucket for repos that fit no specialized list, whether their purpose is clear-but-unspecialized or not yet understood; record which case applies in the ledger `reason` and revisit `everything-else` entries every maintenance pass.
 5. Treat `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the taxonomy source of truth. Keep `references/taxonomy-rubric.md` aligned with that machine-readable taxonomy when changing official bucket semantics.
-
-## Browser Fallback
-
-If `gh` cannot perform the needed operation:
-
-1. Use the browser with an existing logged-in session.
-2. Still keep the local inventory, README corpus, and ledger files as the working record.
-3. Make the same taxonomy decisions locally first, then mirror them in the GitHub UI.
 
 ## Scripts
 
