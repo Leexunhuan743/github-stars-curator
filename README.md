@@ -1,6 +1,6 @@
 # GitHub Stars Curator
 
-A Codex skill for curating GitHub starred repositories into stable, meaningful GitHub Stars Lists.
+A Codex skill that organizes the GitHub repositories you starred into stable, clear, long-term-maintainable lists.
 
 ## Features
 
@@ -92,7 +92,7 @@ See [SKILL.md](SKILL.md) for the agent-facing operating instructions.
 
 # GitHub Stars Curator 中文说明
 
-这是一个 Codex skill，用来把 GitHub starred repositories 整理成稳定、清晰、可长期维护的 GitHub Stars Lists。
+这是一个 Codex skill，用来把你 star（收藏）的 GitHub 仓库整理成稳定、清晰、可长期维护的列表。
 
 ## 功能
 
