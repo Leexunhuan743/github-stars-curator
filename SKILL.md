@@ -27,6 +27,8 @@ Read references only when the task needs them:
 
 The bundled 23-bucket taxonomy is a general-purpose classification: personal software (desktop apps, media, notes and reading, download/transfer utilities), AI and agent tooling, self-hosted services and network tooling, developer infrastructure (`frameworks-libraries`, `data-ml-tools`, `self-hosted`, `game-3d-creative`, `design-assets`, `business-apps`, `web-scraping-data-collection`, `security-pentest-tools`), reference material, and the `everything-else` fallback. A manually labeled 500-repo probe of GitHub's top-starred repositories covers ~98% of repos; the long tail (OS kernels, smart-home hubs, blockchain nodes, non-software repos) is legitimate `everything-else` material.
 
+Classify into the most specific bucket that fits; `everything-else` exists for repos that genuinely fit none.
+
 ## Preconditions
 
 1. Prefer `gh` first. Use the browser only if `gh` is unavailable, under-scoped, or cannot perform a required mutation.
@@ -134,7 +136,9 @@ Done when every repo in scope has non-empty `finalLists` and `classificationStat
 
 ### 4. Refine the taxonomy
 
-Check whether `<workspace>/taxonomy.yaml` exists: it overrides the bundled template for every script (`choose_taxonomy_path` picks it up automatically), so the ledger's list names must resolve against it — flag any mismatch. When the user needs custom lists, create the workspace copy from `references/taxonomy-template.yaml` and edit it there; the workspace file is the user's own template, never the bundled one. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
+Before refining, check whether `<workspace>/taxonomy.yaml` exists: it overrides the bundled template for every script (`choose_taxonomy_path` picks it up automatically when present), so the ledger's list names must resolve against it — flag any mismatch. When the user needs custom lists, create the workspace copy from `references/taxonomy-template.yaml` and edit it there; the workspace file is the user's own template, never the bundled one.
+
+Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
 
 - the bucket has a stable concept,
 - at least a few repos belong there now or obviously soon,
@@ -169,7 +173,7 @@ python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-
 
 Online plan reads live GitHub data and writes a membership cache; `--use-membership-cache` is only for a deliberately reviewed rerun (details in `references/workflow.md`, List sync safety).
 
-Before applying, reconcile any drift per Precondition 5 — see `references/workflow.md` (cloud drift audit and reconciliation mode).
+Before applying, run an online plan or `scripts/audit_cloud_drift.py` to compare live memberships with the local ledger. Live memberships win when they differ: reconcile via `references/workflow.md` (cloud drift audit and reconciliation mode), merging cloud edits back into the full ledger or writing a narrow incremental ledger that preserves each target repo's current live lists in `finalLists`.
 
 Then apply the reviewed plan:
 
@@ -199,16 +203,20 @@ Done when the report answers every bullet above, including an explicit "none" fo
 
 1. Prefer function over implementation language. A Rust clipboard tool still belongs in `desktop-apps` before it belongs in a generic Rust bucket.
 2. Use multiple lists when they improve retrieval, but keep them meaningful: two lists earn their place only when both names serve a future search question.
-3. Favor stable user intent: what the repo is for, what workflow it supports.
+3. Favor stable user intent:
+   - what the repo is for,
+   - what workflow it supports,
+   - what future search question it answers.
 4. Use `everything-else` as the single fallback bucket for repos that fit no specialized list, whether their purpose is clear-but-unspecialized or not yet understood; record which case applies in the ledger `reason` and revisit `everything-else` entries every maintenance pass.
-5. Keep `references/taxonomy-rubric.md` aligned with the machine-readable taxonomy when changing official bucket semantics.
+5. Treat `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the taxonomy source of truth. Keep `references/taxonomy-rubric.md` aligned with that machine-readable taxonomy when changing official bucket semantics.
 
 ## Browser Fallback
 
 If `gh` cannot perform the needed operation:
 
 1. Use the browser with an existing logged-in session.
-2. Make the same taxonomy decisions locally first, then mirror them in the GitHub UI.
+2. Still keep the local inventory, README corpus, and ledger files as the working record.
+3. Make the same taxonomy decisions locally first, then mirror them in the GitHub UI.
 
 ## Scripts
 
