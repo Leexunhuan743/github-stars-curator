@@ -120,7 +120,7 @@ Deleting a list removes its memberships; repos stay in their other lists. After 
 
 ## Bucket overload review
 
-When any managed list holds roughly 40 or more repos (or clearly outgrows the rest — roughly double the median bucket size), pause the classification flow and run this review. The `everything-else` fallback deserves the same treatment when it grows past a few dozen repos: that is the clearest signal that the taxonomy is missing buckets.
+When any managed list holds more than roughly one tenth of the total star count (with a floor of 30 repos, so small star sets do not trip it) — or clearly outgrows the rest, at roughly double the median bucket size — pause the classification flow and run this review. The `everything-else` fallback deserves the same treatment when it grows past the same threshold: that is the clearest signal that the taxonomy is missing buckets.
 
 1. List every repo in the overloaded bucket with its summary or description.
 2. Cluster them by main function or theme and count each cluster.
