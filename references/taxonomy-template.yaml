@@ -28,13 +28,11 @@ lists:
   - name: desktop-apps
     description: General user-facing desktop apps, clipboard managers, chat export and archive tools, native utilities, and everyday GUI software.
   - name: reading-apps
-    description: RSS readers, desktop reading apps, document readers, and subscription-based reading workflows.
+    description: "RSS readers, desktop reading apps, document readers, subscription-based reading workflows, and self-hosted read-later, ebook, manga, or library servers."
   - name: pdf-document-tools
     description: PDF and document readers, editors, converters, OCR/compression tools, document viewers, and document-to-Markdown or AI-prep utilities.
   - name: note-software
     description: Note-taking apps, markdown knowledge tools, PKM systems, scratchpads, and personal knowledge software.
-  - name: selfhosted-reading-bookmarks
-    description: Self-hosted reading libraries, read-later services, bookmark archives, and manga or ebook servers.
   - name: references-guides
     description: Reference collections, awesome lists, guides, tutorials, datasets, books, and learning resources.
   - name: publishing-site-pipelines

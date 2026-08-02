@@ -45,7 +45,6 @@ This rubric starts from a practical, retrieval-oriented taxonomy that has alread
 - `reading-apps`: RSS readers, desktop reading apps, document readers, and subscription-based reading workflows
 - `pdf-document-tools`: PDF and document readers, editors, converters, OCR/compression tools, document viewers, and document-to-Markdown or AI-prep utilities
 - `note-software`: note-taking apps, markdown knowledge tools, PKM systems, scratchpads, and personal knowledge software
-- `selfhosted-reading-bookmarks`: self-hosted reading libraries, read-later services, bookmark archives, and manga or ebook servers
 - `references-guides`: reference collections, awesome lists, guides, tutorials, datasets, books, and learning resources
 - `publishing-site-pipelines`: doc-to-site, book-generation, static publishing, content-to-website, and automated publication pipelines
 - `self-hosted`: deployable self-hosted services, home-lab apps, private web tools, APIs, and personal server software
@@ -72,19 +71,18 @@ These twenty-three buckets are the front rank of this skill's taxonomy. When a r
 14. `reading-apps`
 15. `pdf-document-tools`
 16. `note-software`
-17. `selfhosted-reading-bookmarks`
-18. `references-guides`
-19. `publishing-site-pipelines`
-20. `self-hosted`
-21. `cloudflare-network-proxy`
-22. `everything-else`
+17. `references-guides`
+18. `publishing-site-pipelines`
+19. `self-hosted`
+20. `cloudflare-network-proxy`
+21. `everything-else`
 
 Ordering principle:
 
 1. File movement, acquisition, and clipboard flow: `downloaders`, `cloud-drive-transfer-sync`, `clipboard-tools`.
 2. Media consumption: `music-players`, `image-viewers`, `video-players`.
 3. AI, development, terminal, local system, and desktop app workflows: `agent-harnesses`, `agent-skills-mcp`, `ai-agents`, `dev-tools`, `terminal`, `windows-tools`, `desktop-apps`.
-4. Reading, document tooling, notes, self-hosted reading libraries, and reference material: `reading-apps`, `pdf-document-tools`, `note-software`, `selfhosted-reading-bookmarks`, `references-guides`.
+4. Reading, document tooling, notes, and reference material: `reading-apps`, `pdf-document-tools`, `note-software`, `references-guides`.
 5. Publishing, self-hosted services, and network infrastructure: `publishing-site-pipelines`, `self-hosted`, `cloudflare-network-proxy`.
 6. Controlled fallback: `everything-else`.
 
@@ -260,12 +258,11 @@ Common confusions:
 
 ## Formal rules for reading and document lists
 
-Use four reading and document-oriented lanes:
+Use three reading and document-oriented lanes:
 
-1. `reading-apps` for subscription reading and ordinary desktop reading tools,
+1. `reading-apps` for subscription reading, ordinary desktop reading tools, and self-hosted read-later or reading-library servers,
 2. `pdf-document-tools` for PDF/document editing, conversion, OCR, compression, viewing components, and document-to-Markdown or AI-prep pipelines,
-3. `note-software` for notes, markdown knowledge, and PKM-style tools,
-4. `selfhosted-reading-bookmarks` for self-hosted reading libraries, read-later services, and bookmark archives.
+3. `note-software` for notes, markdown knowledge, and PKM-style tools.
 
 Do not create a broad catch-all reading bucket beyond these lanes.
 
@@ -273,9 +270,9 @@ Do not create a broad catch-all reading bucket beyond these lanes.
 
 Definition:
 
-`RSS readers, desktop reading apps, document readers, and subscription-based reading workflows.`
+`RSS readers, desktop reading apps, document readers, subscription-based reading workflows, and self-hosted read-later, ebook, manga, or library servers.`
 
-Use this when the main workflow is reading content rather than writing notes or managing a personal knowledge base.
+Use this when the main workflow is reading content rather than writing notes or managing a personal knowledge base — including when the reading service is self-hosted.
 
 Belongs here:
 
@@ -283,15 +280,16 @@ Belongs here:
 - newsletter and subscription readers,
 - ebook readers and document-reading apps,
 - desktop reading apps,
-- single-user manga or novel readers when the main experience is simply reading.
+- single-user manga or novel readers when the main experience is simply reading,
+- self-hosted read-later services, bookmark archives, ebook/manga servers, and reading libraries.
 
-Do not use this for note-taking systems, PKM tools, PDF/document processing suites, or self-hosted reading archives unless reading is clearly the primary standalone desktop workflow.
+Do not use this for note-taking systems, PKM tools, PDF/document processing suites, or generic self-hosted services without a reading workflow.
 
 Common confusions:
 
 - if the main workflow is collecting or structuring personal knowledge, use `note-software`,
 - if the main workflow is editing, converting, OCR-ing, compressing, preparing, or programmatically viewing PDF/document files, use `pdf-document-tools`,
-- if the main value is self-hosted read-later, archive, or library management, use `selfhosted-reading-bookmarks`,
+- if the repo is a generic deployable service with no reading/archive workflow, use `self-hosted`,
 - if it is a writing-first tool rather than a reading-first tool, do not force it here.
 
 ### `pdf-document-tools`
@@ -344,31 +342,7 @@ Common confusions:
 
 - if the main experience is reading rather than capturing and organizing knowledge, use `reading-apps`,
 - if the main workflow is PDF/document conversion, OCR, compression, or repair, use `pdf-document-tools`,
-- if the repo is a self-hosted reading archive rather than a note system, use `selfhosted-reading-bookmarks`,
 - if it is mainly a developer editor or documentation browser, use `dev-tools`.
-
-### `selfhosted-reading-bookmarks`
-
-Definition:
-
-`Self-hosted reading libraries, read-later services, bookmark archives, and manga or ebook servers.`
-
-Use this when the repo is mainly a self-hosted archive or library for reading-oriented content.
-
-Belongs here:
-
-- self-hosted read-later services,
-- bookmark archives,
-- manga, comic, and ebook servers,
-- self-hosted reading libraries and bookshelf apps.
-
-Do not use this for ordinary desktop readers or note-taking tools unless self-hosting and archive management are the primary value.
-
-Common confusions:
-
-- single-user desktop readers usually belong in `reading-apps`,
-- PKM and note tools belong in `note-software`,
-- generic self-hosted services with no reading/archive workflow should stay in `self-hosted`.
 
 ## Formal rules for media and download lists
 
@@ -699,7 +673,7 @@ Do not use this merely because a project supports Docker, Vercel, Cloudflare Wor
 Common confusions:
 
 - self-hosted RSS readers and ordinary feed readers belong in `reading-apps`,
-- self-hosted read-later, bookmark, manga, comic, or ebook libraries belong in `selfhosted-reading-bookmarks`,
+- self-hosted read-later, bookmark, manga, comic, or ebook libraries belong in `reading-apps`,
 - self-hosted note or PKM systems belong in `note-software`,
 - self-hosted cloud drives, WebDAV tools, file sharing, R2/S3 browsers, and transfer tools belong in `cloud-drive-transfer-sync`,
 - Cloudflare tunnel, proxy, relay, edge gateway, and proxy subscription projects belong in `cloudflare-network-proxy`,
