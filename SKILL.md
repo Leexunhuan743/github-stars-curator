@@ -129,6 +129,8 @@ When the README and metadata disagree, prefer the README.
 
 Record the results with `scripts/write_classification.py` (see Scripts). It validates every list name against the workspace taxonomy, merges the classification fields into `star-readmes/meta/*.json` without touching upstream repo metadata, and emits a ledger file that `apply_user_lists.py` can consume directly. Treat the emitted ledger as the narrow incremental ledger for this run's repos.
 
+For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification).
+
 Done when every repo in scope has non-empty `finalLists`, `classificationStatus` set to `reviewed`, and `write_classification.py` reported zero unknown lists.
 
 ### 4. Refine the taxonomy

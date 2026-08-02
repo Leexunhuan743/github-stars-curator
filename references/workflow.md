@@ -105,6 +105,20 @@ Online plan fetches memberships only for repositories present in the ledger and 
 
 When reconciling cloud drift, prefer a fresh live read over `--use-membership-cache`. A cache is acceptable only after you have already reviewed it as the exact cloud state you intend to preserve.
 
+## Cleaning up unmanaged lists
+
+Lists on GitHub that are not part of the loaded taxonomy are preserved by default. To retire them (a taxonomy merge or rename left legacy lists behind), delete them with the GraphQL mutation — the skill has no delete-list script:
+
+```bash
+gh api graphql -f query='mutation($id: ID!) { deleteUserList(input: {listId: $id}) { clientMutationId } }' -F id=UL_...
+```
+
+Deleting a list removes its memberships; repos stay in their other lists. After any list deletion, or after an apply interrupted mid-run, rerun the online plan: already-created lists are not re-created (missing lists = 0) and repo updates resume idempotently.
+
+## Large-scale reclassification
+
+For a full reclassification of hundreds of repos onto changed bucket definitions, run parallel subagents: split the repo list (description + meta summary + topics + legacy lists as reference-only) into batches, give each batch the bucket definitions plus explicit re-review instructions for legacy wide buckets (`desktop-apps` / `everything-else` / `self-hosted` / `dev-tools` / `references-guides`), then validate the aggregate 1:1 (name coverage, bucket-name whitelist) before writing the ledger.
+
 ## Human review checkpoints
 
 Pause for a quick review when any of these happen:
