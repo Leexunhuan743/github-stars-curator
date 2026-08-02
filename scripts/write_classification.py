@@ -14,11 +14,16 @@ repos listed in the classification file.
 
 Usage:
 
-    python write_classification.py \\
-        --classifications classifications.json \\
-        --inventory <workspace>/github-stars.json \\
-        --out-dir <workspace> \\
-        --ledger-name incremental-20260801-ledger
+    python write_classification.py \
+        --classifications classifications.json \
+        --inventory <workspace>/github-stars.json \
+        --out-dir <workspace> \
+        --ledger-name incremental-20260801-ledger \
+        --merge-into-full <workspace>/star-readmes/complete-classification-ledger.json
+
+--merge-into-full snapshots the full ledger, then replaces every same-name
+assignment with this run's entry (adding the rest) and writes it back, so a
+narrow run can never leave stale list assignments in the full record.
 
 The --classifications file is a JSON list of objects. Each object requires:
 
@@ -37,7 +42,9 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import apply_user_lists as sync
@@ -204,6 +211,46 @@ def apply_classifications(records, meta_dir, taxonomy, ledger_path, product_type
     return ledger
 
 
+def merge_into_full(full_path, ledger, ledger_stem):
+    """Replace same-name assignments in the full ledger with the narrow entries.
+
+    Snapshots the full ledger next to it first. Returns
+    (replaced, added, total, snapshot_path). Raises ValueError when the full
+    ledger is missing or malformed.
+    """
+    full_path = Path(full_path)
+    if not full_path.exists():
+        raise ValueError(f"Full ledger not found: {full_path}")
+    payload = load_json(full_path)
+    if isinstance(payload, dict) and isinstance(payload.get("assignments"), list):
+        assignments = payload["assignments"]
+    elif isinstance(payload, list):
+        assignments = payload
+    else:
+        raise ValueError(
+            f"Full ledger {full_path} must be a list or an object with an 'assignments' list."
+        )
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    snapshot_path = full_path.with_name(f"{full_path.stem}.before-{ledger_stem}-{timestamp}.json")
+    shutil.copy2(full_path, snapshot_path)
+    by_name = {item["nameWithOwner"]: item for item in assignments}
+    replaced = 0
+    added = 0
+    for entry in ledger:
+        if entry["nameWithOwner"] in by_name:
+            replaced += 1
+        else:
+            added += 1
+        by_name[entry["nameWithOwner"]] = entry
+    merged = sorted(by_name.values(), key=lambda item: item["nameWithOwner"].casefold())
+    if isinstance(payload, dict):
+        payload["assignments"] = merged
+        write_json(full_path, payload)
+    else:
+        write_json(full_path, merged)
+    return replaced, added, len(merged), snapshot_path
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Record classifications into meta files and emit a ledger."
@@ -215,6 +262,7 @@ def main():
     parser.add_argument("--taxonomy", help="Taxonomy YAML; defaults like apply_user_lists.py")
     parser.add_argument("--ledger-name", default="classification-ledger", help="Ledger file name without .json; default 'classification-ledger'")
     parser.add_argument("--product-type", default=DEFAULT_PRODUCT_TYPE, help="productType label for entries without one")
+    parser.add_argument("--merge-into-full", help="Full ledger JSON; snapshot it, then replace same-name assignments with this run's entries")
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir).resolve()
@@ -245,6 +293,15 @@ def main():
 
     print(f"Recorded {len(ledger)} classifications into meta files.")
     print(f"Wrote: {ledger_path}")
+
+    if args.merge_into_full:
+        replaced, added, total, snapshot_path = merge_into_full(
+            args.merge_into_full, ledger, args.ledger_name
+        )
+        print(
+            f"Merged into full ledger: {replaced} replaced, {added} added ({total} total)."
+        )
+        print(f"Snapshot: {snapshot_path}")
 
 
 if __name__ == "__main__":

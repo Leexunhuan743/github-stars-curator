@@ -599,6 +599,8 @@ Definition:
 
 `General user-facing desktop apps, chat export and archive tools, native utilities, and everyday GUI software.`
 
+When a repo is a candidate for `desktop-apps` and any specialized front-rank bucket also fits (image viewers, clipboard tools, terminal/SSH, note/PKM, media players, downloaders, Windows system tools), assign the specialized bucket instead or alongside it — never `desktop-apps` alone. A specialized list earns the repo its own retrieval path; `desktop-apps` alone buries it in the largest bucket.
+
 Use this for ordinary desktop software that users open directly, especially when it is not better captured by a more specific front-rank bucket.
 
 Belongs here:
@@ -708,7 +710,9 @@ Common confusions:
 
 Definition:
 
-`Cloudflare Workers, tunnels, reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients.`
+`Cloudflare Workers and tunnels plus general proxy-network tooling: reverse proxies, subscription and proxy panels, edge gateways, relays, and proxy-network clients.`
+
+The bucket name is historical: it kept the name it launched with, but the definition is the general proxy-network lane, not a Cloudflare-exclusive one. Do not read the name as a scope limit — proxy clients, tunnels, and subscription panels belong here whether or not they touch Cloudflare.
 
 Use this when the repository is mainly about network transport, proxying, tunneling, edge gateways, subscription conversion, acceleration, mirror gateways, or operating Cloudflare as a network layer.
 

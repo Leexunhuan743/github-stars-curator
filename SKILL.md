@@ -219,7 +219,7 @@ Done when the report answers every bullet above, including an explicit "none" fo
    - what the repo is for,
    - what workflow it supports,
    - what future search question it answers.
-4. Keep at least one broad fallback list for unresolved repos.
+4. Use the two fallback lists with distinct roles: `general-software` for repos whose purpose is clear but has no specialized home, `misc-explore` for repos not yet understood well enough to classify. Revisit `misc-explore` entries every maintenance pass.
 5. Treat `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the taxonomy source of truth. Keep `references/taxonomy-rubric.md` aligned with that machine-readable taxonomy when changing official bucket semantics.
 
 ## Browser Fallback

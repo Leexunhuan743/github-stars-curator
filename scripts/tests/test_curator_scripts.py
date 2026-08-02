@@ -810,3 +810,69 @@ def test_write_classification_main_writes_ledger_and_meta(tmp_path, monkeypatch)
     assert ledger[0]["nameWithOwner"] == "owner/repo"
     assert ledger[0]["finalLists"] == ["downloaders"]
     assert ledger[0]["productType"] == "agent-classified"
+
+
+def test_write_classification_merge_into_full_replaces_same_name(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_merge_full_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_wc_merge_full_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    meta_dir = tmp_path / "meta"
+    meta_dir.mkdir()
+    for slug in ("owner__repo", "other__repo"):
+        meta_dir.joinpath(f"{slug}.json").write_text(
+            json.dumps({"nameWithOwner": slug.replace("__", "/")}),
+            encoding="utf-8",
+        )
+    ledger_path = tmp_path / "incremental-ledger.json"
+    ledger = writer.apply_classifications(
+        [
+            {
+                "nameWithOwner": "owner/repo",
+                "finalLists": ["downloaders"],
+                "summary": "New summary",
+                "reason": "Reclassified",
+            },
+            {"nameWithOwner": "other/repo", "finalLists": ["terminal"]},
+        ],
+        meta_dir,
+        taxonomy,
+        ledger_path,
+    )
+    full_path = tmp_path / "complete-classification-ledger.json"
+    full_path.write_text(
+        json.dumps(
+            {
+                "assignments": [
+                    {
+                        "nameWithOwner": "owner/repo",
+                        "finalLists": ["terminal"],
+                        "summary": "Old summary",
+                        "reason": "Old reason",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    replaced, added, total, snapshot_path = writer.merge_into_full(
+        full_path, ledger, "incremental-ledger"
+    )
+
+    assert (replaced, added, total) == (1, 1, 2)
+    assert snapshot_path.exists()
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    assert snapshot["assignments"][0]["finalLists"] == ["terminal"]
+    assert snapshot["assignments"][0]["summary"] == "Old summary"
+    merged = json.loads(full_path.read_text(encoding="utf-8"))
+    by_name = {item["nameWithOwner"]: item for item in merged["assignments"]}
+    assert by_name["owner/repo"]["finalLists"] == ["downloaders"]
+    assert by_name["owner/repo"]["summary"] == "New summary"
+    assert by_name["owner/repo"]["reason"] == "Reclassified"
+    assert by_name["other/repo"]["finalLists"] == ["terminal"]
+
+
+def test_write_classification_merge_into_full_requires_existing_full(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_merge_missing_test")
+    with pytest.raises(ValueError, match="Full ledger not found"):
+        writer.merge_into_full(tmp_path / "nope.json", [], "incremental-ledger")

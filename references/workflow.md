@@ -41,6 +41,8 @@ Run `fetch_readmes.py --only-new-from` immediately after the inventory refresh: 
 
 Record the new repos' classifications with `scripts/write_classification.py` and name the emitted ledger with a topic or date suffix (for example `incremental-20260801-ledger.json`) so it does not collide with the canonical record; pass that file as `--mapping` for the plan and apply steps.
 
+After writeback, merge the narrow ledger back into the full ledger record with `write_classification.py --merge-into-full <full-ledger.json>`: the script snapshots the full ledger, then replaces same-name assignments with the narrow entries (adds the rest), so stale list assignments cannot survive a manual name-only merge.
+
 ## Cloud drift audit and reconciliation mode
 
 Use this mode before every online writeback. Do not rely on the user to remember whether they changed GitHub Stars lists manually in the GitHub UI, browser, mobile app, or another client after the local ledger was last synced.
