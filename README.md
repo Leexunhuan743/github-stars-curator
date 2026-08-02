@@ -14,13 +14,22 @@ A Codex skill that organizes the GitHub repositories you starred into stable, cl
 
 ## Install
 
-Clone this repository into your Codex skills directory:
+Clone this repository into your agent's skills directory:
 
 ```powershell
+# Codex (Windows)
 git clone https://github.com/Leexunhuan743/github-stars-curator.git "$env:USERPROFILE\.codex\skills\github-stars-curator"
+
+# Claude Code
+git clone https://github.com/Leexunhuan743/github-stars-curator.git "$env:USERPROFILE\.claude\skills\github-stars-curator"
+
+# macOS / Linux (any SKILL.md-compatible agent)
+git clone https://github.com/Leexunhuan743/github-stars-curator.git ~/.claude/skills/github-stars-curator
 ```
 
-Restart Codex or reload skills so the `github-stars-curator` skill is discovered.
+The skill's five scripts are plain Python + `gh` and run anywhere; `SKILL.md` follows the shared skill format, so agents that load SKILL.md skills (Claude Code, Cursor, Windsurf, and similar) can use it. `agents/openai.yaml` is Codex-specific interface metadata and is ignored by other agents.
+
+Restart or reload your agent so the `github-stars-curator` skill is discovered.
 
 ## Requirements
 
@@ -106,13 +115,22 @@ See [SKILL.md](SKILL.md) for the agent-facing operating instructions.
 
 ## 安装
 
-把仓库 clone 到 Codex skills 目录：
+把仓库 clone 到你所用 agent 的 skills 目录：
 
 ```powershell
+# Codex (Windows)
 git clone https://github.com/Leexunhuan743/github-stars-curator.git "$env:USERPROFILE\.codex\skills\github-stars-curator"
+
+# Claude Code
+git clone https://github.com/Leexunhuan743/github-stars-curator.git "$env:USERPROFILE\.claude\skills\github-stars-curator"
+
+# macOS / Linux（任何兼容 SKILL.md 的 agent）
+git clone https://github.com/Leexunhuan743/github-stars-curator.git ~/.claude/skills/github-stars-curator
 ```
 
-重启 Codex 或重新加载 skills，让 `github-stars-curator` 被发现。
+5 个脚本是纯 Python + `gh`，与平台无关；`SKILL.md` 采用通用 skill 格式，因此 Claude Code、Cursor、Windsurf 等加载 SKILL.md 的 agent 都能使用。`agents/openai.yaml` 是 Codex 特有的接口元数据，其他 agent 会忽略它。
+
+重启或重新加载 agent，让 `github-stars-curator` 被发现。
 
 ## 依赖
 
