@@ -25,9 +25,7 @@ Read references only when the task needs them:
 
 ## Taxonomy Scope
 
-The bundled 23-bucket taxonomy is a general-purpose classification: personal software (desktop apps, media, notes and reading, download/transfer utilities), AI and agent tooling, self-hosted services and network tooling, developer infrastructure (`frameworks-libraries`, `data-ml-tools`, `self-hosted`, `game-3d-creative`, `design-assets`, `business-apps`, `web-scraping-data-collection`, `security-pentest-tools`), reference material, and the `everything-else` fallback. A manually labeled 500-repo probe of GitHub's top-starred repositories covers ~98% of repos; the long tail (OS kernels, smart-home hubs, blockchain nodes, non-software repos) is legitimate `everything-else` material.
-
-Classify into the most specific bucket that fits; `everything-else` exists for repos that genuinely fit none.
+The bundled 23-bucket taxonomy is a general-purpose classification: personal software, AI and agent tooling, self-hosted services and network tooling, developer infrastructure, reference material, and the `everything-else` fallback. Bucket names and definitions live in `references/taxonomy-template.yaml` and `references/taxonomy-rubric.md`.
 
 ## Preconditions
 
