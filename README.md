@@ -1,5 +1,13 @@
 # GitHub Stars Curator
 
+[**English**](#en) · [**中文**](#cn)
+
+---
+
+<a id="en"></a>
+
+# GitHub Stars Curator
+
 An agent skill (Codex, Claude Code, and other SKILL.md-compatible agents) that organizes the GitHub repositories you starred into stable, clear, long-term-maintainable lists.
 
 ## Features
@@ -96,6 +104,10 @@ python -m pytest tests/ -q
 28 tests cover meta merging, incremental corpus preservation, ledger validation, plan-hash integrity, drift audit semantics, and classification recording — all offline (GitHub calls are mocked).
 
 See [SKILL.md](SKILL.md) for the agent-facing operating instructions.
+
+---
+
+<a id="cn"></a>
 
 ---
 
