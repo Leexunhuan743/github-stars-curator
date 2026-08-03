@@ -1,5 +1,3 @@
-# GitHub Stars Curator
-
 [**English**](#en) · [**中文**](#cn)
 
 ---
