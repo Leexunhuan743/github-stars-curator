@@ -22,8 +22,26 @@ FALLBACK_LIST_DESCRIPTION = "Starred repositories curated by GitHub Stars Curato
 REPO_NAME_PATTERN = re.compile(r"^[^/]+/[^/]+$")
 
 
+DEFAULT_RETRIES = 0
+NETWORK_ERROR_TOKENS = (
+    "timeout",
+    "timed out",
+    "tls",
+    "ssl",
+    "eof",
+    "connection",
+    "reset by peer",
+    "network",
+)
+
+
 def utc_now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def is_network_error(message):
+    normalized = message.lower()
+    return any(token in normalized for token in NETWORK_ERROR_TOKENS)
 
 
 def run_gh(args):
@@ -35,8 +53,28 @@ def run_gh(args):
         errors="replace",
     )
     if result.returncode != 0:
-        raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "gh failed")
+        error = result.stderr.strip() or result.stdout.strip() or "gh failed"
+        if is_network_error(error):
+            raise NetworkError(error)
+        raise RuntimeError(error)
     return result.stdout
+
+
+class NetworkError(RuntimeError):
+    """A gh call failed with a transient network-style error (timeout, TLS, EOF)."""
+
+
+def with_retries(operation, retries):
+    """Run operation() up to retries+1 times; transient network errors retry."""
+    attempt = 0
+    while True:
+        try:
+            return operation()
+        except NetworkError as exc:
+            attempt += 1
+            if attempt > retries:
+                raise
+            print(f"  retrying after network error (attempt {attempt}/{retries}): {exc}")
 
 
 def graphql(query, fields=None, arrays=None):
@@ -595,6 +633,7 @@ def build_plan(assignments, inventory, taxonomy, existing_by_name=None, membersh
         "descriptionUpdates": description_updates,
         "repoUpdates": [],
         "failedRepos": [],
+        "absentRepos": [],
     }
 
     for item in assignments:
@@ -629,7 +668,12 @@ def build_plan(assignments, inventory, taxonomy, existing_by_name=None, membersh
         }
         plan["repoUpdates"].append(repo_plan)
         if not repo_plan["repoIdFound"]:
-            plan["failedRepos"].append({"nameWithOwner": name, "error": "missing repo id in inventory"})
+            plan["absentRepos"].append(
+                {
+                    "nameWithOwner": name,
+                    "error": "repo id not found in inventory; the repo may have been unstarred or the inventory may be stale",
+                }
+            )
     return plan
 
 
@@ -670,6 +714,7 @@ def plan_hash_payload(plan):
             for item in plan.get("repoUpdates", [])
         ],
         "failedRepos": plan.get("failedRepos", []),
+        "absentRepos": plan.get("absentRepos", []),
     }
 
 
@@ -767,12 +812,22 @@ def main():
         action="store_true",
         help="Use a reviewed membership cache when its viewer and list-state fingerprint still match",
     )
+    parser.add_argument(
+        "--retry",
+        type=int,
+        default=0,
+        help="Retry transient network errors (timeout/TLS/EOF) this many times per mutation",
+    )
     args = parser.parse_args()
 
     if args.apply and args.offline_plan:
         raise ValueError("--offline-plan cannot be combined with --apply.")
     if args.apply and not args.approved_plan:
         raise ValueError("--apply requires --approved-plan pointing at a reviewed online plan.")
+    if args.retry < 0:
+        raise ValueError("--retry must be >= 0.")
+
+    retries = args.retry
 
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -846,7 +901,16 @@ def main():
     if not args.apply:
         write_json(out_dir / "github-stars-sync-plan.json", plan)
         print(f"Planned {len(plan['repoUpdates'])} repo assignments.")
-        print(f"Repos needing update: {sum(1 for item in plan['repoUpdates'] if item['needsUpdate'])}")
+        needing = [item for item in plan["repoUpdates"] if item["needsUpdate"]]
+        unchanged = [item for item in plan["repoUpdates"] if not item["needsUpdate"]]
+        adds = sum(1 for item in needing if item["managedListsToAdd"])
+        removes = sum(1 for item in needing if item["managedListsToRemove"])
+        print(f"Repos needing update: {len(needing)} ({adds} with adds, {removes} with removes)")
+        print(f"Repos already correct (skipped): {len(unchanged)}")
+        if plan["absentRepos"]:
+            print(f"Absent repos (not in inventory, not applied): {len(plan['absentRepos'])}")
+            for absent in plan["absentRepos"]:
+                print(f"  - {absent['nameWithOwner']}: {absent['error']}")
         print(f"Missing lists: {len(plan['missingLists'])}")
         print(f"Description updates: {len(plan['descriptionUpdates'])}")
         print(f"Plan hash: {plan['planHash']}")
@@ -871,7 +935,10 @@ def main():
         }
         append_jsonl(journal_path, event)
         try:
-            created = create_list(list_name, taxonomy["descriptions"].get(list_name, FALLBACK_LIST_DESCRIPTION))
+            created = with_retries(
+                lambda: create_list(list_name, taxonomy["descriptions"].get(list_name, FALLBACK_LIST_DESCRIPTION)),
+                retries,
+            )
             existing_by_name[list_name] = created
             created_lists.append(list_name)
             append_jsonl(journal_path, {**event, "time": utc_now(), "status": "ok", "created": created})
@@ -892,7 +959,10 @@ def main():
         }
         append_jsonl(journal_path, event)
         try:
-            updated_list = update_list_description(update["id"], update["name"], update["desiredDescription"])
+            updated_list = with_retries(
+                lambda: update_list_description(update["id"], update["name"], update["desiredDescription"]),
+                retries,
+            )
             existing_by_name[update["name"]] = updated_list
             description_updates.append(update["name"])
             append_jsonl(journal_path, {**event, "time": utc_now(), "status": "ok", "updated": updated_list})
@@ -904,7 +974,8 @@ def main():
     updated = 0
     skipped_unchanged = 0
     skipped_missing = 0
-    for repo_plan in plan["repoUpdates"]:
+    repo_updates_total = len(plan["repoUpdates"])
+    for repo_index, repo_plan in enumerate(plan["repoUpdates"], start=1):
         name = repo_plan["nameWithOwner"]
         repo_id = repo_ids.get(name)
         if not repo_id:
@@ -927,6 +998,11 @@ def main():
         if not repo_plan["needsUpdate"]:
             skipped_unchanged += 1
             continue
+        print(
+            f"  [{repo_index}/{repo_updates_total}] {name}: "
+            f"add={repo_plan['managedListsToAdd']} remove={repo_plan['managedListsToRemove']}",
+            flush=True,
+        )
         list_ids = list_ids_for_repo(repo_plan, existing_by_name, args.replace_all_lists)
         event = {
             **journal_context,
@@ -940,7 +1016,10 @@ def main():
         }
         append_jsonl(journal_path, event)
         try:
-            result_lists = update_item_lists(repo_id, list_ids)
+            result_lists = with_retries(
+                lambda: update_item_lists(repo_id, list_ids),
+                retries,
+            )
             updated += 1
             append_jsonl(journal_path, {**event, "time": utc_now(), "status": "ok", "resultLists": result_lists})
         except Exception as exc:
@@ -961,12 +1040,17 @@ def main():
         "updatedRepos": updated,
         "skippedUnchangedRepos": skipped_unchanged,
         "skippedReposWithMissingLists": skipped_missing,
+        "absentRepos": plan["absentRepos"],
         "failedRepos": failures,
         "journalPath": str(journal_path),
     }
     write_json(out_dir / "github-stars-writeback-summary.json", summary)
     print(f"Updated repos: {updated}")
     print(f"Skipped unchanged repos: {skipped_unchanged}")
+    if plan["absentRepos"]:
+        print(f"Absent repos skipped (not in inventory): {len(plan['absentRepos'])}")
+        for absent in plan["absentRepos"]:
+            print(f"  - {absent['nameWithOwner']}: {absent['error']}")
     print(f"Failures: {len(failures)}")
     print(f"Wrote: {out_dir / 'github-stars-writeback-summary.json'}")
     print(f"Journal: {journal_path}")

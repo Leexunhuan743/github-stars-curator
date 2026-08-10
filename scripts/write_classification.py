@@ -19,11 +19,14 @@ Usage:
         --inventory <workspace>/github-stars.json \
         --out-dir <workspace> \
         --ledger-name incremental-20260801-ledger \
-        --merge-into-full <workspace>/star-readmes/complete-classification-ledger.json
+        --merge-into-full <workspace>/star-readmes/complete-classification-ledger.json \
+        --prune-removed <workspace>/github-stars.json
 
 --merge-into-full snapshots the full ledger, then replaces every same-name
 assignment with this run's entry (adding the rest) and writes it back, so a
-narrow run can never leave stale list assignments in the full record.
+narrow run can never leave stale list assignments in the full record. With
+--prune-removed, full-ledger entries whose repos are absent from the given
+inventory (unstarred) are dropped instead of surviving.
 
 The --classifications file is a JSON list of objects. Each object requires:
 
@@ -187,7 +190,7 @@ def apply_classifications(records, meta_dir, taxonomy, ledger_path, product_type
                 "description": merged.get("description"),
                 "summary": merged.get("summary"),
                 "productType": merged.get("productType"),
-                "primaryFunction": "; ".join(entry["finalLists"]),
+                "primaryFunction": merged.get("primaryFunction") or (entry["finalLists"][0] if entry["finalLists"] else None),
                 "facets": list(merged.get("facets") or []),
                 "platforms": list(merged.get("platforms") or []),
                 "signals": list(merged.get("signals") or []),
@@ -211,12 +214,16 @@ def apply_classifications(records, meta_dir, taxonomy, ledger_path, product_type
     return ledger
 
 
-def merge_into_full(full_path, ledger, ledger_stem):
+def merge_into_full(full_path, ledger, ledger_stem, prune_removed_names=None):
     """Replace same-name assignments in the full ledger with the narrow entries.
 
     Snapshots the full ledger next to it first. Returns
-    (replaced, added, total, snapshot_path). Raises ValueError when the full
-    ledger is missing or malformed.
+    (replaced, added, removed, total, snapshot_path). Raises ValueError when
+    the full ledger is missing or malformed.
+
+    prune_removed_names: when given, assignments for repos not in this set
+    are dropped from the merged ledger (used for repos that were unstarred,
+    so stale entries cannot survive a merge).
     """
     full_path = Path(full_path)
     if not full_path.exists():
@@ -236,6 +243,15 @@ def merge_into_full(full_path, ledger, ledger_stem):
     by_name = {item["nameWithOwner"]: item for item in assignments}
     replaced = 0
     added = 0
+    removed = 0
+    if prune_removed_names is not None:
+        kept = {}
+        for name, item in by_name.items():
+            if name not in prune_removed_names:
+                removed += 1
+            else:
+                kept[name] = item
+        by_name = kept
     for entry in ledger:
         if entry["nameWithOwner"] in by_name:
             replaced += 1
@@ -248,7 +264,7 @@ def merge_into_full(full_path, ledger, ledger_stem):
         write_json(full_path, payload)
     else:
         write_json(full_path, merged)
-    return replaced, added, len(merged), snapshot_path
+    return replaced, added, removed, len(merged), snapshot_path
 
 
 def main():
@@ -263,6 +279,10 @@ def main():
     parser.add_argument("--ledger-name", default="classification-ledger", help="Ledger file name without .json; default 'classification-ledger'")
     parser.add_argument("--product-type", default=DEFAULT_PRODUCT_TYPE, help="productType label for entries without one")
     parser.add_argument("--merge-into-full", help="Full ledger JSON; snapshot it, then replace same-name assignments with this run's entries")
+    parser.add_argument(
+        "--prune-removed",
+        help="Inventory JSON; with --merge-into-full, drop full-ledger entries whose repos are not in this inventory (unstarred repos)",
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir).resolve()
@@ -295,12 +315,26 @@ def main():
     print(f"Wrote: {ledger_path}")
 
     if args.merge_into_full:
-        replaced, added, total, snapshot_path = merge_into_full(
-            args.merge_into_full, ledger, args.ledger_name
+        prune_names = None
+        if args.prune_removed:
+            prune_payload = sync.load_json(args.prune_removed)
+            prune_names = {
+                item["nameWithOwner"] for item in sync.normalize_inventory(prune_payload)
+            }
+        replaced, added, removed, total, snapshot_path = merge_into_full(
+            args.merge_into_full, ledger, args.ledger_name, prune_names
         )
         print(
-            f"Merged into full ledger: {replaced} replaced, {added} added ({total} total)."
+            f"Merged into full ledger: {replaced} replaced, {added} added"
+            + (f", {removed} pruned" if removed else "")
+            + f" ({total} total)."
         )
+        if removed:
+            print(
+                f"Pruned {removed} full-ledger entries whose repos are not in the current inventory "
+                "(unstarred). Their GitHub list memberships, if any, must be cleaned up separately "
+                "— see references/workflow.md (Handling removed stars)."
+            )
         print(f"Snapshot: {snapshot_path}")
 
 

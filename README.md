@@ -32,7 +32,7 @@ git clone https://github.com/Leexunhuan743/github-stars-curator.git "$env:USERPR
 git clone https://github.com/Leexunhuan743/github-stars-curator.git ~/.claude/skills/github-stars-curator
 ```
 
-The skill's five scripts are plain Python + `gh` and run anywhere; `SKILL.md` follows the shared skill format, so agents that load SKILL.md skills (Claude Code, Cursor, Windsurf, and similar) can use it. `agents/openai.yaml` is Codex-specific interface metadata and is ignored by other agents.
+The skill's seven scripts are plain Python + `gh` and run anywhere; `SKILL.md` follows the shared skill format, so agents that load SKILL.md skills (Claude Code, Cursor, Windsurf, and similar) can use it. `agents/openai.yaml` is Codex-specific interface metadata and is ignored by other agents.
 
 Restart or reload your agent so the `github-stars-curator` skill is discovered.
 
@@ -59,7 +59,7 @@ python scripts/fetch_star_inventory.py --out-dir "<workspace>"
 python scripts/fetch_readmes.py --inventory "<workspace>/github-stars.json" --out-dir "<workspace>/star-readmes"
 
 # 3. (agent) read READMEs, classify, record with:
-python scripts/write_classification.py --classifications records.json --out-dir "<workspace>" --ledger-name incremental-20260802-ledger
+python scripts/write_classification.py --classifications records.json --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --ledger-name incremental-20260802-ledger
 
 # 4. validate locally, then review the online plan
 python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
@@ -73,9 +73,11 @@ python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-
 
 - `fetch_star_inventory.py` — fetch stars and compute the delta (`github-stars.json`, `github-stars-delta.json`, `github-stars-summary.json`).
 - `fetch_readmes.py` — download READMEs into `star-readmes/raw/` and merge per-repo metadata stubs.
-- `write_classification.py` — record agent classifications into meta files and emit a ledger; validates list names against the taxonomy; `--merge-into-full` merges a narrow ledger back into the full record with a snapshot.
+- `split_manifest.py` — split the inventory into balanced batches for parallel subagent classification.
+- `merge_classifications.py` — validate and merge per-batch classification results (JSON-integrity, 1:1 coverage, list-name whitelist, cross-batch duplicates).
+- `write_classification.py` — record agent classifications into meta files and emit a ledger; validates list names against the taxonomy; `--merge-into-full` merges a narrow ledger back into the full record with a snapshot, and `--prune-removed` drops unstarred repos from it.
 - `audit_cloud_drift.py` — read-only live-vs-ledger drift audit before writeback; exit code 0 = no drift, non-zero = reconcile.
-- `apply_user_lists.py` — offline plan / online plan / apply (creates missing lists in taxonomy order, updates descriptions and memberships, writes an audit journal).
+- `apply_user_lists.py` — offline plan / online plan / apply (creates missing lists in taxonomy order, updates descriptions and memberships, writes an audit journal); `--retry N` retries transient network errors per mutation.
 
 ## Taxonomy
 
@@ -98,7 +100,7 @@ cd scripts
 python -m pytest tests/ -q
 ```
 
-28 tests cover meta merging, incremental corpus preservation, ledger validation, plan-hash integrity, drift audit semantics, and classification recording — all offline (GitHub calls are mocked).
+37 tests cover meta merging, incremental corpus preservation, ledger validation, plan-hash integrity, drift audit semantics, classification recording, batch split/merge, and network retry — all offline (GitHub calls are mocked).
 
 See [SKILL.md](SKILL.md) for the agent-facing operating instructions.
 
@@ -137,7 +139,7 @@ git clone https://github.com/Leexunhuan743/github-stars-curator.git "$env:USERPR
 git clone https://github.com/Leexunhuan743/github-stars-curator.git ~/.claude/skills/github-stars-curator
 ```
 
-5 个脚本是纯 Python + `gh`，与平台无关；`SKILL.md` 采用通用 skill 格式，因此 Claude Code、Cursor、Windsurf 等加载 SKILL.md 的 agent 都能使用。`agents/openai.yaml` 是 Codex 特有的接口元数据，其他 agent 会忽略它。
+7 个脚本是纯 Python + `gh`，与平台无关；`SKILL.md` 采用通用 skill 格式，因此 Claude Code、Cursor、Windsurf 等加载 SKILL.md 的 agent 都能使用。`agents/openai.yaml` 是 Codex 特有的接口元数据，其他 agent 会忽略它。
 
 重启或重新加载 agent，让 `github-stars-curator` 被发现。
 
@@ -161,7 +163,7 @@ python scripts/fetch_star_inventory.py --out-dir "<workspace>"
 python scripts/fetch_readmes.py --inventory "<workspace>/github-stars.json" --out-dir "<workspace>/star-readmes"
 
 # 3. （agent）读 README 分类后用脚本记录
-python scripts/write_classification.py --classifications records.json --out-dir "<workspace>" --ledger-name incremental-20260802-ledger
+python scripts/write_classification.py --classifications records.json --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --ledger-name incremental-20260802-ledger
 
 # 4. 离线计划 → 在线计划（审阅 planHash）
 python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
@@ -175,9 +177,11 @@ python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-
 
 - `fetch_star_inventory.py`：拉取清单并算增量（github-stars.json / delta / summary）；
 - `fetch_readmes.py`：下载 README 语料并合并 meta 元数据；
-- `write_classification.py`：记录分类到 meta 并生成 ledger，校验列表名；`--merge-into-full` 把窄增量合并回完整 ledger（先快照）；
+- `split_manifest.py`：把清单切成均衡批次，供并行子代理分类；
+- `merge_classifications.py`：校验并合并各批分类结果（JSON 完整性、1:1 覆盖、列表名白名单、跨批重复）；
+- `write_classification.py`：记录分类到 meta 并生成 ledger，校验列表名；`--merge-into-full` 把窄增量合并回完整 ledger（先快照），`--prune-removed` 从中剔除已取消 star 的仓库；
 - `audit_cloud_drift.py`：写回前只读漂移审计（exit 0 = 无漂移，非零 = 需协调）；
-- `apply_user_lists.py`：离线/在线计划与 apply（按 taxonomy 顺序创建缺失列表、更新描述与成员、写审计 journal）。
+- `apply_user_lists.py`：离线/在线计划与 apply（按 taxonomy 顺序创建缺失列表、更新描述与成员、写审计 journal）；`--retry N` 每次变更自动重试瞬时网络错误。
 
 ## Taxonomy
 
@@ -200,6 +204,6 @@ cd scripts
 python -m pytest tests/ -q
 ```
 
-28 个测试覆盖 meta 合并、增量语料保留、ledger 校验、planHash 完整性、漂移审计语义、分类记录——全部离线（GitHub 调用被 mock）。
+37 个测试覆盖 meta 合并、增量语料保留、ledger 校验、planHash 完整性、漂移审计语义、分类记录、批次切分/合并、网络重试——全部离线（GitHub 调用被 mock）。
 
 详细的 agent 操作规程见 [SKILL.md](SKILL.md)。

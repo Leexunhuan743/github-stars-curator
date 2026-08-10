@@ -101,9 +101,40 @@ Unknown list names are rejected by default. Add intentional new buckets to `<wor
 
 Apply mode requires `--approved-plan <workspace>/github-stars-sync-plan.json`. The script compares the live plan hash with the reviewed plan hash, verifies the inventory owner against the authenticated viewer, creates missing lists, updates stale descriptions, skips unchanged repositories, and writes a run-scoped journal entry around every mutation. Partial failures are summarized before the command exits non-zero.
 
+**Apply is idempotent.** Every repo update is `updateUserListsForItem` with the full desired list set, so a failed or interrupted run can simply be re-planned and re-applied: already-synced repos are skipped, and only the failed mutations are retried. No manual cleanup is needed before a rerun. Pass `--retry N` to have the script itself retry transient network errors (timeout/TLS/EOF) per mutation.
+
 Online plan fetches memberships only for repositories present in the ledger and writes a membership cache. By default, every online plan/apply still performs a live GitHub read. Use `--use-membership-cache` only for a deliberately reviewed rerun; the cache is ignored unless its viewer login and list-state fingerprint match the current account state.
 
 When reconciling cloud drift, prefer a fresh live read over `--use-membership-cache`. A cache is acceptable only after you have already reviewed it as the exact cloud state you intend to preserve.
+
+## Handling removed stars
+
+When `fetch_star_inventory.py` reports `removedStars`, the inventory no longer contains those repos, but their GitHub list memberships may still exist (unstarring does not remove a repo from user lists). The pipeline handles this in three places:
+
+1. **Full-ledger pruning (local).** When merging a narrow ledger into the full record, pass `--prune-removed <workspace>/github-stars.json` to `write_classification.py --merge-into-full`: full-ledger entries whose repos are absent from the current inventory are dropped (snapshot first, same as the normal merge). This keeps the local record honest.
+2. **Plan/apply reporting.** `apply_user_lists.py` lists repos from the ledger that are not in the inventory as `absentRepos` (plan JSON, console output, and writeback summary). They are never mutated — there is no repo id to mutate with.
+3. **Cloud cleanup (manual).** Removing a repo from GitHub lists requires its repository node id, which the inventory no longer carries. `updateUserListsForItem` cannot run without it. To clean up a removed star's memberships, resolve the id and reset its lists:
+
+```bash
+# 1. resolve the repo node id (repo still exists on GitHub)
+gh api graphql -f query='query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id } }' -f owner=OWNER -f name=NAME
+
+# 2. remove it from every list (empty listIds = remove from all)
+gh api graphql -f query='mutation($itemId: ID!, $listIds: [ID!]!) { updateUserListsForItem(input: {itemId: $itemId, listIds: $listIds}) { lists { id name } } }' -F itemId=REPO_ID -f listIds='[]'
+```
+
+If the repo was deleted or is no longer accessible, the id cannot be resolved and the memberships must be cleaned up in the GitHub UI.
+
+## Common failure modes
+
+- **Apply network timeouts (TLS/EOF).** `apply_user_lists.py` treats timeout/TLS/EOF/connection errors as transient. Rerun the apply (idempotent — already-synced repos are skipped), or pass `--retry N` so each mutation retries N times before failing.
+- **Subagent output truncated.** A `batch-N-records.json` that is not valid JSON (truncated, missing trailing `]`) is detected by `merge_classifications.py` and reported per batch; the records file is not written until every batch validates. Have the subagent rewrite the batch.
+- **Missing `--inventory`.** `write_classification.py` rejects classifications for repos not present in the inventory; pass `--inventory <workspace>/github-stars.json` (required for repo-existence validation).
+- **`--out-dir` semantics.** `fetch_readmes.py --out-dir` points at the corpus directory (`<workspace>/star-readmes`); `write_classification.py --out-dir` and `apply_user_lists.py --out-dir` point at the workspace root (where `taxonomy.yaml` lives and where plan/summary files are written). Do not reuse the README corpus dir as the workspace `--out-dir`.
+- **`gh` auth scope.** Lists are a GraphQL-only surface (`gh api user/lists` returns 404 — expected; there is no REST endpoint). Verify `gh auth status` shows a scope including `user`; the scripts call `fetch_viewer_state` and fail with a clear error when the token lacks access.
+- **PowerShell quoting.** Inline `python -c "..."` with nested quotes frequently breaks under PowerShell escaping. For ad-hoc data work (merging batches, validation probes), write a small script file (in `%TEMP%` or the workspace) and run it, instead of fighting inline quoting.
+- **Taxonomy YAML errors.** `load_taxonomy` rejects non-object payloads, empty/missing `lists`, duplicate names, missing descriptions, and counts above `maxLists`. Fix the YAML (see `references/taxonomy-template.yaml` for shape) and rerun the offline plan.
+- **planHash mismatch.** Refuses apply; regenerate the online plan after any mapping/inventory/taxonomy change and review the new plan hash.
 
 ## Cleaning up unmanaged lists
 
@@ -135,7 +166,37 @@ Propose splits only where the cluster is stable and the split serves a real retr
 
 ## Large-scale reclassification
 
-For a full reclassification of hundreds of repos onto changed bucket definitions, run parallel subagents: split the repo list (description + meta summary + topics + legacy lists as reference-only) into batches, give each batch the bucket definitions plus explicit re-review instructions for legacy wide buckets (`desktop-apps` / `everything-else` / `self-hosted` / `dev-tools` / `references-guides`), then validate the aggregate 1:1 (name coverage, bucket-name whitelist) before writing the ledger. This path replaces `write_classification.py` — the aggregate validation is its equivalent gate, and the written ledger is the new full record (no `--merge-into-full` needed).
+For a full reclassification of hundreds of repos onto changed bucket definitions, run parallel subagents with the two batch tools:
+
+1. Split the inventory into balanced batches with `scripts/split_manifest.py` (adds `summary` from `star-readmes/meta` and `legacyLists` from the full ledger as reference-only):
+
+```bash
+python scripts/split_manifest.py --inventory "<workspace>/github-stars.json" --batches 8 --out-dir "<workspace>/batches" --meta-dir "<workspace>/star-readmes/meta" --ledger "<workspace>/star-readmes/complete-ledger.json"
+```
+
+2. Give each subagent one `batch-N.json` plus the bucket definitions and explicit re-review instructions for legacy wide buckets (`desktop-apps` / `everything-else` / `self-hosted` / `dev-tools` / `references-guides`); have it write `batch-N-records.json` in the same shape `write_classification.py` accepts:
+
+```json
+[
+  {
+    "nameWithOwner": "owner/repo",
+    "finalLists": ["list-a", "list-b"],
+    "summary": "optional one-line summary",
+    "reason": "optional placement reason",
+    "confidence": "high"
+  }
+]
+```
+
+`finalLists` is required and must be a non-empty list of taxonomy list names; every repo in the batch needs exactly one record.
+
+3. Validate and combine with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, cross-batch duplicate checks). It refuses to write `records.json` until every batch validates:
+
+```bash
+python scripts/merge_classifications.py --batches-dir "<workspace>/batches" --out-dir "<workspace>" --records-name records
+```
+
+4. Record with `write_classification.py --classifications "<workspace>/records.json" ...` and treat the emitted ledger as the new full record (no `--merge-into-full` needed). The merge validation is the equivalent gate to the old aggregate 1:1 check, and the written ledger is the new full record.
 
 ## Human review checkpoints
 

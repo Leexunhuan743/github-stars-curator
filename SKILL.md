@@ -34,10 +34,9 @@ The bundled 23-bucket taxonomy is a general-purpose classification: personal sof
 3. Treat the local corpus and ledger as the working memory, but treat GitHub as the final source of truth for list membership after writeback.
 4. Assume classification is iterative. New or ambiguous repos can stay in the `everything-else` fallback bucket until the next pass.
 5. Before any online writeback, proactively check for cloud drift even if the user did not mention manual edits. Read live GitHub memberships, compare them with the local ledger, and treat live memberships as newer when they differ. Reconcile the local plan with cloud drift, or use a narrow incremental ledger that preserves each target repo's current live lists. Do not apply an old full ledger over possible manual cloud edits.
-6. If the user asks for local-only skill work, taxonomy design, or offline review, do not access GitHub.
-7. `scripts/apply_user_lists.py` requires PyYAML. If it is missing, install it with `python -m pip install pyyaml`.
-8. Ledger shape is validated from `references/classification-ledger.schema.json`; keep that schema as the source for assignment field rules.
-9. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (see `references/glossary.md`) are preserved by default; when the online plan or drift audit reveals them, ask the user whether to delete them — never delete without explicit approval (see `references/workflow.md`, Cleaning up unmanaged lists).
+6. For local-only work (taxonomy design, offline review), run only the offline steps: classification, ledger validation, and offline planning make no GitHub calls — skip inventory and README fetches.
+7. Ledger shape is validated from `references/classification-ledger.schema.json`; keep that schema as the source for assignment field rules.
+8. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (see `references/glossary.md`) are preserved by default; when the online plan or drift audit reveals them, ask the user whether to delete them — never delete without explicit approval (see `references/workflow.md`, Cleaning up unmanaged lists).
 
 ## Default Workspace Layout
 
@@ -128,7 +127,7 @@ When the README and metadata disagree, prefer the README.
 
 Record the results with `scripts/write_classification.py` (see Scripts). It validates every list name against the workspace taxonomy, merges the classification fields into `star-readmes/meta/*.json` without touching upstream repo metadata, and emits a ledger file that `apply_user_lists.py` can consume directly. Treat the emitted ledger as the narrow incremental ledger for this run's repos.
 
-For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification). The aggregate validation (1:1 name coverage, bucket-name whitelist) replaces `write_classification.py` for that path.
+For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification). Split the inventory with `scripts/split_manifest.py`, classify each batch in a subagent, then validate and combine the batch results with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, and cross-batch duplicate checks) before recording. The aggregate validation replaces `write_classification.py` for that path.
 
 Done when every repo in scope has non-empty `finalLists` and `classificationStatus` set to `reviewed`, and list names validated against the workspace taxonomy (via `write_classification.py` or the aggregate whitelist check).
 
@@ -149,11 +148,11 @@ When any bucket holds more than roughly one tenth of the total star count (floor
 
 Done when the taxonomy stays at or under the 32-list cap and every list name the ledger uses resolves against the workspace taxonomy.
 
-### 5. Produce the taxonomy summary
+### 5. Validate the ledger shape
 
-After the ledger is produced (step 3), generate a human-readable taxonomy summary so the user can audit list intent quickly.
+Before planning, confirm the ledger matches `references/classification-ledger.schema.json` (required fields, list types, unique `finalLists`). There is no separate summary artifact: the schema check plus step 6's offline-plan output (desired lists, unknown lists, failed repos) is the human-readable summary — the offline plan is the validation gate.
 
-Done when the summary reflects the current ledger, and every ledger entry matches the shape documented in `references/classification-ledger.schema.json` (offline-plan validation is step 6's first check).
+Done when every ledger entry passes the schema check (step 6's offline plan enforces this as its first check and prints the summary counts).
 
 ### 6. Plan and sync the final mapping
 
@@ -179,7 +178,7 @@ Then apply the reviewed plan:
 python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
 ```
 
-Apply preserves existing GitHub lists outside the managed taxonomy by default and rejects unknown list names; `--replace-all-lists` and `--allow-unknown-lists` are deliberate opt-outs documented in `references/workflow.md` (List sync safety).
+Apply preserves existing GitHub lists outside the managed taxonomy by default and rejects unknown list names; `--replace-all-lists` and `--allow-unknown-lists` are deliberate opt-outs documented in `references/workflow.md` (List sync safety). Apply is idempotent: a failed or interrupted run can be re-planned and re-applied without manual cleanup, and `--retry N` makes transient network errors (timeout/TLS/EOF) retry per mutation. Repos in the ledger but absent from the inventory (e.g. unstarred) are reported as `absentRepos` and never mutated; handle their cloud memberships per `references/workflow.md` (Handling removed stars).
 
 Done when the online plan shows zero unexpected `listsToRemove`, the apply exits zero, the writeback summary and journal were written, the ledger record is current (narrow runs: merged with `write_classification.py --merge-into-full`; full reclassification: the new full ledger is the record), and the plan's `taxonomyPath` points at the intended taxonomy (the workspace override when present).
 
@@ -192,7 +191,7 @@ Summarize:
 - what new lists were created,
 - what lists were reused,
 - how many repos were updated,
-- any ambiguous repos left in a holding list,
+- any ambiguous repos left in `everything-else`,
 - any failures that need manual follow-up.
 
 Done when the report answers every bullet above, including an explicit "none" for empty ones.
@@ -212,15 +211,19 @@ Done when the report answers every bullet above, including an explicit "none" fo
 
 - `scripts/fetch_star_inventory.py`: fetch stars and compute delta
 - `scripts/fetch_readmes.py`: pull README corpus and create per-repo metadata stubs
-- `scripts/write_classification.py`: merge agent classifications into meta files and emit a ledger; validates list names against the taxonomy and makes no GitHub calls
+- `scripts/split_manifest.py`: split the inventory into balanced batches for parallel subagent classification
+- `scripts/merge_classifications.py`: validate and merge per-batch classification results into one records file (JSON-integrity, 1:1 coverage, list-name whitelist, cross-batch duplicate checks)
+- `scripts/write_classification.py`: merge agent classifications into meta files and emit a ledger; validates list names against the taxonomy and makes no GitHub calls; `--merge-into-full` also accepts `--prune-removed <inventory>` to drop unstarred repos from the full ledger
 - `scripts/audit_cloud_drift.py`: read live GitHub list memberships and report drift from a local ledger before writeback
-- `scripts/apply_user_lists.py`: plan and optionally apply GitHub user list changes
+- `scripts/apply_user_lists.py`: plan and optionally apply GitHub user list changes; `--retry N` retries transient network errors (timeout/TLS/EOF) per mutation
 
 ## References
 
-- `references/glossary.md`: leading-word definitions (ledger, drift, planHash, writeback, narrow incremental ledger, unmanaged list)
-- `references/workflow.md`: end-to-end operating procedure
-- `references/taxonomy-rubric.md`: starter taxonomy and list-creation heuristics
-- `references/taxonomy-template.yaml`: machine-readable starter taxonomy
-- `references/classification-ledger.schema.json`: reviewable schema for ledger assignments
-- `references/github-graphql-notes.md`: auth, API behavior, and writeback caveats
+See the Overview pointers above for when each file is reached; this is the index of what exists.
+
+- `references/glossary.md`
+- `references/workflow.md`
+- `references/taxonomy-rubric.md`
+- `references/taxonomy-template.yaml`
+- `references/classification-ledger.schema.json`
+- `references/github-graphql-notes.md`

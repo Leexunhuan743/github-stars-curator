@@ -37,17 +37,17 @@ def utc_now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def run_gh(args, text=True):
+def run_gh(args):
     result = subprocess.run(
         ["gh", *args],
         capture_output=True,
-        text=text,
-        encoding="utf-8" if text else None,
-        errors="replace" if text else None,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "gh failed")
-    return result.stdout if text else result.stdout
+    return result.stdout
 
 
 def safe_slug(name_with_owner):

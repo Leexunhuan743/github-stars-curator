@@ -855,11 +855,11 @@ def test_write_classification_merge_into_full_replaces_same_name(tmp_path):
         encoding="utf-8",
     )
 
-    replaced, added, total, snapshot_path = writer.merge_into_full(
+    replaced, added, removed, total, snapshot_path = writer.merge_into_full(
         full_path, ledger, "incremental-ledger"
     )
 
-    assert (replaced, added, total) == (1, 1, 2)
+    assert (replaced, added, removed, total) == (1, 1, 0, 2)
     assert snapshot_path.exists()
     snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
     assert snapshot["assignments"][0]["finalLists"] == ["terminal"]
@@ -930,3 +930,294 @@ def test_drift_audit_all_inventory_marks_absent_repos_as_empty():
     for name in {"owner/ledgered", "owner/unledgered"}:
         local.setdefault(name, set())
     assert local == {"owner/ledgered": {"downloaders"}, "owner/unledgered": set()}
+
+
+SPLIT_SCRIPT = SKILL_DIR / "scripts" / "split_manifest.py"
+MERGE_SCRIPT = SKILL_DIR / "scripts" / "merge_classifications.py"
+
+
+def test_split_manifest_splits_balanced_and_enriches(tmp_path):
+    splitter = load_module(SPLIT_SCRIPT, "split_manifest_test")
+    inventory = tmp_path / "github-stars.json"
+    inventory.write_text(
+        json.dumps(
+            {
+                "ownerLogin": "viewer",
+                "repositories": [
+                    {"id": f"R{i}", "nameWithOwner": f"owner/repo{i}", "description": f"desc {i}"}
+                    for i in range(7)
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    meta_dir = tmp_path / "star-readmes" / "meta"
+    meta_dir.mkdir(parents=True)
+    meta_dir.joinpath("owner__repo0.json").write_text(
+        json.dumps({"nameWithOwner": "owner/repo0", "summary": "Manual summary"}),
+        encoding="utf-8",
+    )
+    ledger = tmp_path / "complete-ledger.json"
+    ledger.write_text(
+        json.dumps(
+            {"assignments": [{"nameWithOwner": "owner/repo1", "finalLists": ["terminal"]}]}
+        ),
+        encoding="utf-8",
+    )
+    out_dir = tmp_path / "batches"
+
+    import sys as _sys
+
+    _sys.argv = [
+        "split_manifest.py",
+        "--inventory",
+        str(inventory),
+        "--batches",
+        "3",
+        "--out-dir",
+        str(out_dir),
+        "--meta-dir",
+        str(meta_dir),
+        "--ledger",
+        str(ledger),
+    ]
+    splitter.main()
+
+    batch_files = sorted(out_dir.glob("batch-*.json"))
+    assert len(batch_files) == 3
+    sizes = [len(json.loads(p.read_text(encoding="utf-8"))) for p in batch_files]
+    assert sizes == [3, 2, 2]
+    first_batch = json.loads(batch_files[0].read_text(encoding="utf-8"))
+    by_name = {item["nameWithOwner"]: item for item in first_batch}
+    assert by_name["owner/repo0"]["summary"] == "Manual summary"
+    assert by_name["owner/repo1"]["legacyLists"] == ["terminal"]
+    assert by_name["owner/repo2"]["legacyLists"] == []
+    summary = json.loads((out_dir / "split-summary.json").read_text(encoding="utf-8"))
+    assert summary["totalRepos"] == 7
+
+
+def test_merge_classifications_combines_valid_batches(tmp_path):
+    merger = load_module(MERGE_SCRIPT, "merge_classifications_valid_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_merge_support_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    batches_dir = tmp_path / "batches"
+    batches_dir.mkdir()
+    batches_dir.joinpath("batch-1.json").write_text(
+        json.dumps([{"nameWithOwner": "owner/a"}, {"nameWithOwner": "owner/b"}]),
+        encoding="utf-8",
+    )
+    batches_dir.joinpath("batch-1-records.json").write_text(
+        json.dumps(
+            [
+                {"nameWithOwner": "owner/a", "finalLists": ["downloaders"]},
+                {"nameWithOwner": "owner/b", "finalLists": ["terminal"]},
+            ]
+        ),
+        encoding="utf-8",
+    )
+    batches_dir.joinpath("batch-2.json").write_text(
+        json.dumps([{"nameWithOwner": "owner/c"}]),
+        encoding="utf-8",
+    )
+    batches_dir.joinpath("batch-2-records.json").write_text(
+        json.dumps([{"nameWithOwner": "owner/c", "finalLists": ["dev-tools"]}]),
+        encoding="utf-8",
+    )
+    import sys as _sys
+
+    _sys.argv = [
+        "merge_classifications.py",
+        "--batches-dir",
+        str(batches_dir),
+        "--out-dir",
+        str(tmp_path),
+        "--records-name",
+        "records",
+    ]
+    merger.main()
+
+    records = json.loads((tmp_path / "records.json").read_text(encoding="utf-8"))
+    assert {r["nameWithOwner"] for r in records} == {"owner/a", "owner/b", "owner/c"}
+    report = json.loads((tmp_path / "merge-summary.json").read_text(encoding="utf-8"))
+    assert report["ok"] is True
+
+
+def test_merge_classifications_reports_truncated_records(tmp_path):
+    merger = load_module(MERGE_SCRIPT, "merge_classifications_truncated_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_merge_truncated_test")
+    apply_lists.load_taxonomy(TAXONOMY_PATH)
+    batches_dir = tmp_path / "batches"
+    batches_dir.mkdir()
+    batches_dir.joinpath("batch-1.json").write_text(
+        json.dumps([{"nameWithOwner": "owner/a"}]),
+        encoding="utf-8",
+    )
+    batches_dir.joinpath("batch-1-records.json").write_text(
+        '[{"nameWithOwner": "owner/a", "finalLists": ["downloaders"}]',  # truncated
+        encoding="utf-8",
+    )
+    import sys as _sys
+
+    _sys.argv = [
+        "merge_classifications.py",
+        "--batches-dir",
+        str(batches_dir),
+        "--out-dir",
+        str(tmp_path),
+        "--records-name",
+        "records",
+    ]
+    with pytest.raises(SystemExit) as exc_info:
+        merger.main()
+    assert exc_info.value.code == 1
+    assert not (tmp_path / "records.json").exists()
+    report = json.loads((tmp_path / "merge-summary.json").read_text(encoding="utf-8"))
+    assert report["ok"] is False
+    assert any("truncated" in issue or "invalid/truncated" in issue for issue in report["issues"])
+
+
+def test_merge_classifications_detects_missing_and_unknown(tmp_path):
+    merger = load_module(MERGE_SCRIPT, "merge_classifications_missing_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_merge_missing_test")
+    apply_lists.load_taxonomy(TAXONOMY_PATH)
+    batches_dir = tmp_path / "batches"
+    batches_dir.mkdir()
+    batches_dir.joinpath("batch-1.json").write_text(
+        json.dumps([{"nameWithOwner": "owner/a"}, {"nameWithOwner": "owner/b"}]),
+        encoding="utf-8",
+    )
+    batches_dir.joinpath("batch-1-records.json").write_text(
+        json.dumps(
+            [
+                {"nameWithOwner": "owner/a", "finalLists": ["downloaders"]},
+                {"nameWithOwner": "owner/b", "finalLists": ["no-such-bucket"]},
+            ]
+        ),
+        encoding="utf-8",
+    )
+    import sys as _sys
+
+    _sys.argv = [
+        "merge_classifications.py",
+        "--batches-dir",
+        str(batches_dir),
+        "--out-dir",
+        str(tmp_path),
+        "--records-name",
+        "records",
+    ]
+    with pytest.raises(SystemExit) as exc_info:
+        merger.main()
+    assert exc_info.value.code == 1
+    report = json.loads((tmp_path / "merge-summary.json").read_text(encoding="utf-8"))
+    assert any("unknown list names" in issue for issue in report["issues"])
+
+
+def test_merge_classifications_detects_cross_batch_duplicates(tmp_path):
+    merger = load_module(MERGE_SCRIPT, "merge_classifications_dup_test")
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_merge_dup_test")
+    apply_lists.load_taxonomy(TAXONOMY_PATH)
+    batches_dir = tmp_path / "batches"
+    batches_dir.mkdir()
+    for index, repos in enumerate([["owner/a"], ["owner/a"]], start=1):
+        batches_dir.joinpath(f"batch-{index}.json").write_text(
+            json.dumps([{"nameWithOwner": repos[0]}]),
+            encoding="utf-8",
+        )
+        batches_dir.joinpath(f"batch-{index}-records.json").write_text(
+            json.dumps([{"nameWithOwner": repos[0], "finalLists": ["downloaders"]}]),
+            encoding="utf-8",
+        )
+    import sys as _sys
+
+    _sys.argv = [
+        "merge_classifications.py",
+        "--batches-dir",
+        str(batches_dir),
+        "--out-dir",
+        str(tmp_path),
+        "--records-name",
+        "records",
+    ]
+    with pytest.raises(SystemExit) as exc_info:
+        merger.main()
+    assert exc_info.value.code == 1
+    report = json.loads((tmp_path / "merge-summary.json").read_text(encoding="utf-8"))
+    assert report["crossBatchDuplicates"] == ["owner/a"]
+
+
+def test_with_retries_retries_network_errors_only():
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_retry_test")
+
+    calls = []
+    def flaky():
+        calls.append(1)
+        if len(calls) < 3:
+            raise apply_lists.NetworkError("connection reset by peer")
+        return "ok"
+
+    assert apply_lists.with_retries(flaky, 3) == "ok"
+    assert len(calls) == 3
+
+    calls2 = []
+    def non_network():
+        calls2.append(1)
+        raise RuntimeError("403 Forbidden")
+
+    with pytest.raises(RuntimeError, match="403"):
+        apply_lists.with_retries(non_network, 3)
+    assert len(calls2) == 1
+
+
+def test_is_network_error_matches_transient_tokens():
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_net_token_test")
+    assert apply_lists.is_network_error("TLS handshake timeout")
+    assert apply_lists.is_network_error("connection reset by peer")
+    assert apply_lists.is_network_error("unexpected EOF")
+    assert not apply_lists.is_network_error("403 Forbidden")
+    assert not apply_lists.is_network_error("Could not resolve to a node")
+
+
+def test_build_plan_reports_absent_repos(tmp_path):
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_absent_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+    plan = apply_lists.build_plan(
+        [{"nameWithOwner": "owner/ghost", "finalLists": ["downloaders"]}],
+        [{"id": "R1", "nameWithOwner": "owner/present"}],
+        taxonomy,
+        existing_by_name={"downloaders": {"id": "L1", "name": "downloaders", "description": "d"}},
+        memberships={"owner/ghost": []},
+    )
+    assert plan["absentRepos"] == [
+        {
+            "nameWithOwner": "owner/ghost",
+            "error": "repo id not found in inventory; the repo may have been unstarred or the inventory may be stale",
+        }
+    ]
+    assert plan["failedRepos"] == []
+
+
+def test_merge_into_full_prunes_removed_repos(tmp_path):
+    writer = load_module(WRITE_CLASS_SCRIPT, "write_classification_prune_test")
+    full_path = tmp_path / "complete-ledger.json"
+    full_path.write_text(
+        json.dumps(
+            {
+                "assignments": [
+                    {"nameWithOwner": "owner/still", "finalLists": ["terminal"]},
+                    {"nameWithOwner": "owner/gone", "finalLists": ["downloaders"]},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    replaced, added, removed, total, snapshot_path = writer.merge_into_full(
+        full_path,
+        [{"nameWithOwner": "owner/still", "finalLists": ["dev-tools"]}],
+        "incremental-ledger",
+        prune_removed_names={"owner/still"},
+    )
+    assert (replaced, added, removed, total) == (1, 0, 1, 1)
+    merged = json.loads(full_path.read_text(encoding="utf-8"))
+    assert [item["nameWithOwner"] for item in merged["assignments"]] == ["owner/still"]
+    assert snapshot_path.exists()

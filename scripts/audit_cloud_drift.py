@@ -144,6 +144,14 @@ def main() -> int:
 
     print(f"Audited repos: {report['auditedRepoCount']}")
     print(f"Repos with drift: {report['driftRepoCount']}")
+    live_not_local = any(item["liveNotLocal"] for item in repo_drift)
+    only_local_not_live = bool(repo_drift) and not live_not_local
+    if only_local_not_live:
+        print(
+            "No liveNotLocal drift: every difference is a repo the ledger assigns "
+            "to lists it is not yet in. This is the expected pre-sync state for "
+            "newly classified repos (or a first full run), not a stop signal."
+        )
     for item in repo_drift[:20]:
         print(
             f"{item['nameWithOwner']}: "
