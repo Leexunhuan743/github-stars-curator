@@ -5,6 +5,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,6 +42,10 @@ def utc_now():
 
 def is_network_error(message):
     normalized = message.lower()
+    # gh prints API failures as "... (HTTP <code>)"; a 4xx is a permanent
+    # rejection, never transient, even if its body mentions a token word.
+    if re.search(r"\(http 4\d\d\)", normalized):
+        return False
     return any(token in normalized for token in NETWORK_ERROR_TOKENS)
 
 
@@ -65,7 +70,13 @@ class NetworkError(RuntimeError):
 
 
 def with_retries(operation, retries):
-    """Run operation() up to retries+1 times; transient network errors retry."""
+    """Run operation() up to retries+1 times; transient network errors retry.
+
+    Retries sleep with exponential backoff (1, 2, 4, ... capped at 10s) so a
+    sustained outage does not hammer the endpoint back-to-back. Only
+    NetworkError (network-layer failures, HTTP 5xx) triggers a retry; any
+    other exception propagates immediately.
+    """
     attempt = 0
     while True:
         try:
@@ -74,6 +85,7 @@ def with_retries(operation, retries):
             attempt += 1
             if attempt > retries:
                 raise
+            time.sleep(min(2 ** (attempt - 1), 10))
             print(f"  retrying after network error (attempt {attempt}/{retries}): {exc}")
 
 
@@ -854,6 +866,10 @@ def main():
         print(f"Desired lists: {plan['desiredListCount']}")
         print(f"Unknown lists: {len(plan['unknownLists'])}")
         print(f"Failed repos: {len(plan['failedRepos'])}")
+        if plan["absentRepos"]:
+            print(f"Absent repos (not in inventory, not applied): {len(plan['absentRepos'])}")
+            for absent in plan["absentRepos"]:
+                print(f"  - {absent['nameWithOwner']}: {absent['error']}")
         print(f"Plan hash: {plan['planHash']}")
         print(f"Wrote: {out_dir / 'github-stars-sync-plan.json'}")
         return
@@ -901,8 +917,9 @@ def main():
     if not args.apply:
         write_json(out_dir / "github-stars-sync-plan.json", plan)
         print(f"Planned {len(plan['repoUpdates'])} repo assignments.")
-        needing = [item for item in plan["repoUpdates"] if item["needsUpdate"]]
-        unchanged = [item for item in plan["repoUpdates"] if not item["needsUpdate"]]
+        actionable = [item for item in plan["repoUpdates"] if item["repoIdFound"]]
+        needing = [item for item in actionable if item["needsUpdate"]]
+        unchanged = [item for item in actionable if not item["needsUpdate"]]
         adds = sum(1 for item in needing if item["managedListsToAdd"])
         removes = sum(1 for item in needing if item["managedListsToRemove"])
         print(f"Repos needing update: {len(needing)} ({adds} with adds, {removes} with removes)")
@@ -935,10 +952,21 @@ def main():
         }
         append_jsonl(journal_path, event)
         try:
-            created = with_retries(
-                lambda: create_list(list_name, taxonomy["descriptions"].get(list_name, FALLBACK_LIST_DESCRIPTION)),
-                retries,
-            )
+            def create_reconciled():
+                # createUserList is the one non-idempotent mutation: if a
+                # previous attempt committed but the response was lost, the
+                # retry must adopt the existing list instead of creating a
+                # duplicate. Re-fetch viewer lists first and reuse by name.
+                viewer = fetch_viewer_state()
+                for candidate in viewer["lists"]:
+                    if candidate["name"] == list_name:
+                        return candidate
+                return create_list(
+                    list_name,
+                    taxonomy["descriptions"].get(list_name, FALLBACK_LIST_DESCRIPTION),
+                )
+
+            created = with_retries(create_reconciled, retries)
             existing_by_name[list_name] = created
             created_lists.append(list_name)
             append_jsonl(journal_path, {**event, "time": utc_now(), "status": "ok", "created": created})
@@ -974,8 +1002,8 @@ def main():
     updated = 0
     skipped_unchanged = 0
     skipped_missing = 0
-    repo_updates_total = len(plan["repoUpdates"])
-    for repo_index, repo_plan in enumerate(plan["repoUpdates"], start=1):
+    mutation_index = 0
+    for repo_plan in plan["repoUpdates"]:
         name = repo_plan["nameWithOwner"]
         repo_id = repo_ids.get(name)
         if not repo_id:
@@ -998,8 +1026,9 @@ def main():
         if not repo_plan["needsUpdate"]:
             skipped_unchanged += 1
             continue
+        mutation_index += 1
         print(
-            f"  [{repo_index}/{repo_updates_total}] {name}: "
+            f"  [{mutation_index}] {name}: "
             f"add={repo_plan['managedListsToAdd']} remove={repo_plan['managedListsToRemove']}",
             flush=True,
         )

@@ -28,14 +28,17 @@ Usage:
         --batches-dir <workspace>/batches \
         --out-dir <workspace> \
         --records-name records \
-        [--taxonomy <taxonomy.yaml>] \
-        [--allow-unknown-lists]
+        [--taxonomy <taxonomy.yaml>]
+
+Unknown list names are always rejected: add any new bucket to
+<workspace>/taxonomy.yaml before running the batch pipeline.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -48,7 +51,7 @@ def load_json_or_report(path):
         return None, f"file not found: {path}"
     try:
         return json.loads(path.read_text(encoding="utf-8")), None
-    except json.JSONDecodeError as exc:
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         return None, f"invalid/truncated JSON in {path}: {exc}"
 
 
@@ -62,7 +65,7 @@ def write_json(path, data):
     tmp_path.replace(path)
 
 
-def validate_batch_records(batch_repos, records, batch_name, taxonomy_names, allow_unknown):
+def validate_batch_records(batch_repos, records, batch_name, taxonomy_names):
     """Validate one batch's records. Returns (issues, normalized_records)."""
     issues = []
     batch_names = set(batch_repos)
@@ -86,10 +89,13 @@ def validate_batch_records(batch_repos, records, batch_name, taxonomy_names, all
         if name not in batch_names:
             issues.append(f"{batch_name}: record for {name} is not in this batch")
             continue
-        if not allow_unknown:
-            unknown = sorted(list_name for list_name in final_lists if list_name not in taxonomy_names)
-            if unknown:
-                issues.append(f"{batch_name}: {name} unknown list names: {', '.join(unknown)}")
+        if any(not isinstance(entry, str) for entry in final_lists):
+            issues.append(f"{batch_name}: {name} finalLists entries must be strings")
+        if len(set(final_lists)) != len(final_lists):
+            issues.append(f"{batch_name}: {name} finalLists contains duplicate list names")
+        unknown = sorted(list_name for list_name in final_lists if list_name not in taxonomy_names)
+        if unknown:
+            issues.append(f"{batch_name}: {name} unknown list names: {', '.join(unknown)}")
         normalized.append(record)
     missing = sorted(batch_names - record_names)
     if missing:
@@ -105,7 +111,6 @@ def main():
     parser.add_argument("--out-dir", required=True, help="Workspace directory for records.json and merge-summary.json")
     parser.add_argument("--records-name", default="records", help="Output records file stem (default 'records')")
     parser.add_argument("--taxonomy", help="Taxonomy YAML; defaults like apply_user_lists.py")
-    parser.add_argument("--allow-unknown-lists", action="store_true", help="Skip the list-name whitelist check")
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir).resolve()
@@ -113,14 +118,32 @@ def main():
     taxonomy_names = set(taxonomy["names"])
 
     batches_dir = Path(args.batches_dir).resolve()
-    batch_files = sorted(batches_dir.glob("batch-*.json"))
+    batch_files = sorted(
+        path for path in batches_dir.glob("batch-*.json")
+        if re.fullmatch(r"batch-\d+\.json", path.name)
+    )
     if not batch_files:
-        raise ValueError(f"No batch-*.json files found in {batches_dir}")
-    # batch-1.json, batch-2.json, ... skip any records/summary files matching the glob.
-    batch_files = [
-        path for path in batch_files
-        if path.name.startswith("batch-") and path.name.endswith(".json") and "-records" not in path.name
-    ]
+        raise ValueError(f"No batch-<N>.json files found in {batches_dir}")
+
+    # Validate the batch set is complete: split_manifest.py writes
+    # split-summary.json naming exactly which batches it produced. A missing
+    # batch would silently under-cover; a stale higher-index file from an
+    # earlier, larger split would be merged as if current.
+    expected_count = None
+    split_summary_path = batches_dir / "split-summary.json"
+    if split_summary_path.exists():
+        try:
+            split_summary = json.loads(split_summary_path.read_text(encoding="utf-8"))
+            expected_count = split_summary.get("batches")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            split_summary = None
+    batch_indexes = sorted(int(path.stem.split("-")[1]) for path in batch_files)
+    if expected_count is not None and batch_indexes != list(range(1, expected_count + 1)):
+        raise ValueError(
+            f"Batch set is incomplete or has stale files: found {batch_indexes}, "
+            f"split-summary.json expects 1..{expected_count}. "
+            "Re-run split_manifest.py or remove stale batch-*.json files."
+        )
 
     all_issues = []
     per_batch = []
@@ -153,7 +176,7 @@ def main():
 
         batch_names = {item["nameWithOwner"] for item in batch_repos if isinstance(item, dict) and item.get("nameWithOwner")}
         issues, normalized = validate_batch_records(
-            batch_names, records, f"batch-{batch_index}", taxonomy_names, args.allow_unknown_lists
+            batch_names, records, f"batch-{batch_index}", taxonomy_names
         )
         all_issues.extend(issues)
         per_batch.append(
@@ -183,7 +206,6 @@ def main():
         "generatedAt": sync.utc_now(),
         "taxonomyPath": taxonomy["path"],
         "batchesDir": str(batches_dir),
-        "allowUnknownLists": args.allow_unknown_lists,
         "perBatch": per_batch,
         "crossBatchDuplicates": sorted(cross_batch_duplicates),
         "issues": all_issues,

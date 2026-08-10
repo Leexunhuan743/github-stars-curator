@@ -9,7 +9,7 @@ This skill works best as a repeatable maintenance loop rather than a one-off dum
 3. Read README content and enrich the per-repo metadata.
 4. Refine the taxonomy only after reading real content.
 5. Check `<workspace>/taxonomy.yaml` before classifying: if it exists it overrides the bundled template for all scripts — confirm the ledger's list names resolve against it, and keep it in sync when the user adds custom lists.
-6. Generate a classification ledger and human-readable summary.
+6. Generate a classification ledger (the human-readable summary is the step-7 offline plan's console counts, not a separate artifact).
 7. Run list sync in offline plan mode.
 8. Verify GitHub access with `gh auth status`.
 9. Run online plan mode to inspect existing lists, descriptions, memberships, and `planHash`.
@@ -111,7 +111,7 @@ When reconciling cloud drift, prefer a fresh live read over `--use-membership-ca
 
 When `fetch_star_inventory.py` reports `removedStars`, the inventory no longer contains those repos, but their GitHub list memberships may still exist (unstarring does not remove a repo from user lists). The pipeline handles this in three places:
 
-1. **Full-ledger pruning (local).** When merging a narrow ledger into the full record, pass `--prune-removed <workspace>/github-stars.json` to `write_classification.py --merge-into-full`: full-ledger entries whose repos are absent from the current inventory are dropped (snapshot first, same as the normal merge). This keeps the local record honest.
+1. **Full-ledger pruning (local).** When merging a narrow ledger into the full record, pass `--prune-removed <workspace>/github-stars.json` to `write_classification.py --merge-into-full`: full-ledger entries whose repos are absent from the current inventory are dropped (snapshot first, same as the normal merge). This keeps the local record honest. The prune inventory must be fetched in the same run as `--inventory` — a stale inventory (missing still-starred repos) would prune legitimate entries; wrongly pruned repos resurface as `liveNotLocal` in the next drift audit, so the damage is visible and recoverable from the snapshot.
 2. **Plan/apply reporting.** `apply_user_lists.py` lists repos from the ledger that are not in the inventory as `absentRepos` (plan JSON, console output, and writeback summary). They are never mutated — there is no repo id to mutate with.
 3. **Cloud cleanup (manual).** Removing a repo from GitHub lists requires its repository node id, which the inventory no longer carries. `updateUserListsForItem` cannot run without it. To clean up a removed star's memberships, resolve the id and reset its lists:
 
@@ -119,8 +119,9 @@ When `fetch_star_inventory.py` reports `removedStars`, the inventory no longer c
 # 1. resolve the repo node id (repo still exists on GitHub)
 gh api graphql -f query='query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id } }' -f owner=OWNER -f name=NAME
 
-# 2. remove it from every list (empty listIds = remove from all)
-gh api graphql -f query='mutation($itemId: ID!, $listIds: [ID!]!) { updateUserListsForItem(input: {itemId: $itemId, listIds: $listIds}) { lists { id name } } }' -F itemId=REPO_ID -f listIds='[]'
+# 2. remove it from every list (empty listIds = remove from all; gh's
+#    bare-key `listIds[]` syntax is the way to send an empty array)
+gh api graphql -f query='mutation($itemId: ID!, $listIds: [ID!]!) { updateUserListsForItem(input: {itemId: $itemId, listIds: $listIds}) { lists { id name } } }' -F itemId=REPO_ID -f listIds[]
 ```
 
 If the repo was deleted or is no longer accessible, the id cannot be resolved and the memberships must be cleaned up in the GitHub UI.

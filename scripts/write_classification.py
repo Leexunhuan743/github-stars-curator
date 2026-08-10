@@ -114,7 +114,7 @@ def normalize_classifications(records, product_type, taxonomy_names):
             "classificationStatus": record.get("classificationStatus")
             or DEFAULT_CLASSIFICATION_STATUS,
         }
-        for key in ("summary", "reason", "confidence"):
+        for key in ("summary", "reason", "confidence", "primaryFunction"):
             if record.get(key) is not None:
                 entry[key] = record[key]
         for key in ("facets", "platforms", "signals", "candidateLists"):
@@ -190,7 +190,7 @@ def apply_classifications(records, meta_dir, taxonomy, ledger_path, product_type
                 "description": merged.get("description"),
                 "summary": merged.get("summary"),
                 "productType": merged.get("productType"),
-                "primaryFunction": merged.get("primaryFunction") or (entry["finalLists"][0] if entry["finalLists"] else None),
+                "primaryFunction": entry.get("primaryFunction") or (entry["finalLists"][0] if entry["finalLists"] else None),
                 "facets": list(merged.get("facets") or []),
                 "platforms": list(merged.get("platforms") or []),
                 "signals": list(merged.get("signals") or []),
@@ -284,6 +284,8 @@ def main():
         help="Inventory JSON; with --merge-into-full, drop full-ledger entries whose repos are not in this inventory (unstarred repos)",
     )
     args = parser.parse_args()
+    if args.prune_removed and not args.merge_into_full:
+        raise ValueError("--prune-removed requires --merge-into-full.")
 
     out_dir = Path(args.out_dir).resolve()
     taxonomy_path = sync.choose_taxonomy_path(out_dir, args.taxonomy)
