@@ -74,7 +74,7 @@ Recommended command:
 python scripts/audit_cloud_drift.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --all-inventory
 ```
 
-The command exits zero when there is no drift and non-zero when drift is found. A non-zero drift result is not a script failure; it is a stop-and-reconcile signal before any apply.
+The command exits zero when there is no drift (or only expected pre-sync `localNotLive` drift — see below) and non-zero when real drift (`liveNotLocal`) is found. A non-zero drift result is not a script failure; it is a stop-and-reconcile signal before any apply.
 
 ## Artifacts worth keeping
 
@@ -103,7 +103,7 @@ Apply mode requires `--approved-plan <workspace>/github-stars-sync-plan.json`. T
 
 **Apply is idempotent.** Every repo update is `updateUserListsForItem` with the full desired list set, so a failed or interrupted run can simply be re-planned and re-applied: already-synced repos are skipped, and only the failed mutations are retried. No manual cleanup is needed before a rerun. Pass `--retry N` to have the script itself retry transient network errors (timeout/TLS/EOF) per mutation.
 
-Online plan fetches memberships only for repositories present in the ledger and writes a membership cache. By default, every online plan/apply still performs a live GitHub read. Use `--use-membership-cache` only for a deliberately reviewed rerun; the cache is ignored unless its viewer login and list-state fingerprint match the current account state.
+Online plan reads list items from every existing list (the retained view is filtered to repositories present in the ledger) and writes a membership cache. By default, every online plan/apply still performs a live GitHub read. Use `--use-membership-cache` only for a deliberately reviewed rerun; the cache is ignored unless its viewer login and list-state fingerprint match the current account state, and it is deleted after any apply so a later run cannot reuse pre-writeback memberships.
 
 When reconciling cloud drift, prefer a fresh live read over `--use-membership-cache`. A cache is acceptable only after you have already reviewed it as the exact cloud state you intend to preserve.
 
@@ -117,7 +117,7 @@ When `fetch_star_inventory.py` reports `removedStars`, the inventory no longer c
 
 ```bash
 # 1. resolve the repo node id (repo still exists on GitHub)
-gh api graphql -f query='query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id } }' -f owner=OWNER -f name=NAME
+gh api graphql -f query='query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { id } }' -F owner=OWNER -F name=NAME
 
 # 2. remove it from every list (empty listIds = remove from all; gh's
 #    bare-key `listIds[]` syntax is the way to send an empty array)
@@ -130,7 +130,7 @@ If the repo was deleted or is no longer accessible, the id cannot be resolved an
 
 - **Apply network timeouts (TLS/EOF).** `apply_user_lists.py` treats timeout/TLS/EOF/connection errors as transient. Rerun the apply (idempotent — already-synced repos are skipped), or pass `--retry N` so each mutation retries N times before failing.
 - **Subagent output truncated.** A `batch-N-records.json` that is not valid JSON (truncated, missing trailing `]`) is detected by `merge_classifications.py` and reported per batch; the records file is not written until every batch validates. Have the subagent rewrite the batch.
-- **Missing `--inventory`.** `write_classification.py` rejects classifications for repos not present in the inventory; pass `--inventory <workspace>/github-stars.json` (required for repo-existence validation).
+- **Missing `--inventory`.** With `--inventory`, `write_classification.py` rejects classifications for repos not present in the inventory; pass `--inventory <workspace>/github-stars.json` to enable repo-existence validation (without it, any repo is accepted).
 - **`--out-dir` semantics.** `fetch_readmes.py --out-dir` points at the corpus directory (`<workspace>/star-readmes`); `write_classification.py --out-dir` and `apply_user_lists.py --out-dir` point at the workspace root (where `taxonomy.yaml` lives and where plan/summary files are written). Do not reuse the README corpus dir as the workspace `--out-dir`.
 - **`gh` auth scope.** Lists are a GraphQL-only surface (`gh api user/lists` returns 404 — expected; there is no REST endpoint). Verify `gh auth status` shows a scope including `user`; the scripts call `fetch_viewer_state` and fail with a clear error when the token lacks access.
 - **PowerShell quoting.** Inline `python -c "..."` with nested quotes frequently breaks under PowerShell escaping. For ad-hoc data work (merging batches, validation probes), write a small script file (in `%TEMP%` or the workspace) and run it, instead of fighting inline quoting.

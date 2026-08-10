@@ -1,6 +1,6 @@
 ---
 name: github-stars-curator
-description: Curate GitHub starred repositories into stable, meaningful user lists by detecting new stars, downloading READMEs into a local corpus, enriching per-repo metadata, refining taxonomy decisions, and syncing the final mapping back to GitHub via gh. Use this when a user wants their starred repos sorted into lists, a recent batch of new stars filed incrementally, or their star-list taxonomy reviewed and refined.
+description: Organize starred GitHub repos into stable, clear lists: detect new stars, download READMEs into a local corpus, classify each repo against the taxonomy, and sync the approved mapping back to GitHub via gh. Use this when a user wants their starred repos sorted into lists, a recent batch of new stars filed incrementally, or their star-list taxonomy reviewed and refined.
 ---
 
 # GitHub Stars Curator
@@ -21,6 +21,7 @@ Read references only when the task needs them:
 - Read `references/workflow.md` for inventory refreshes, README fetching, local corpus maintenance, or end-to-end runs.
 - Read `references/taxonomy-rubric.md` when classifying repositories, refining buckets, or explaining list placement.
 - Read `references/github-graphql-notes.md` before online plan/apply work.
+- Read `references/classification-ledger.schema.json` when validating or extending the ledger shape (see step 5).
 - Use `references/taxonomy-template.yaml` as the bundled machine-readable taxonomy. If `<workspace>/taxonomy.yaml` exists, scripts use that workspace taxonomy instead.
 
 ## Taxonomy Scope
@@ -127,7 +128,7 @@ When the README and metadata disagree, prefer the README.
 
 Record the results with `scripts/write_classification.py` (see Scripts). It validates every list name against the workspace taxonomy, merges the classification fields into `star-readmes/meta/*.json` without touching upstream repo metadata, and emits a ledger file that `apply_user_lists.py` can consume directly. Treat the emitted ledger as the narrow incremental ledger for this run's repos.
 
-For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification). Split the inventory with `scripts/split_manifest.py`, classify each batch in a subagent, then validate and combine the batch results with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, and cross-batch duplicate checks) before recording. The aggregate validation replaces `write_classification.py` for that path.
+For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification). Split the inventory with `scripts/split_manifest.py`, classify each batch in a subagent, then validate and combine the batch results with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, and cross-batch duplicate checks) before recording. The merge validation replaces `write_classification.py`'s validation gate for that path; recording the merged records still goes through `write_classification.py`.
 
 Done when every repo in scope has non-empty `finalLists` and `classificationStatus` set to `reviewed`, and list names validated against the workspace taxonomy (via `write_classification.py` or the aggregate whitelist check).
 

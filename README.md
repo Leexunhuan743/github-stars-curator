@@ -61,12 +61,15 @@ python scripts/fetch_readmes.py --inventory "<workspace>/github-stars.json" --ou
 # 3. (agent) read READMEs, classify, record with:
 python scripts/write_classification.py --classifications records.json --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --ledger-name incremental-20260802-ledger
 
-# 4. validate locally, then review the online plan
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
+# 4. validate locally, then review the online plan (narrow ledger from step 3)
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/incremental-20260802-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/incremental-20260802-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
 
 # 5. apply the reviewed plan
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/incremental-20260802-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
+
+# 6. merge the narrow ledger back into the full record (snapshots first)
+python scripts/write_classification.py --classifications records.json --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --ledger-name incremental-20260802-ledger --merge-into-full "<workspace>/star-readmes/complete-ledger.json"
 ```
 
 ## Scripts
@@ -100,7 +103,7 @@ cd scripts
 python -m pytest tests/ -q
 ```
 
-37 tests cover meta merging, incremental corpus preservation, ledger validation, plan-hash integrity, drift audit semantics, classification recording, batch split/merge, and network retry — all offline (GitHub calls are mocked).
+43 tests cover meta merging, incremental corpus preservation, ledger validation, plan-hash integrity, drift audit semantics, classification recording, batch split/merge, and network retry — all offline (GitHub calls are mocked).
 
 See [SKILL.md](SKILL.md) for the agent-facing operating instructions.
 
@@ -165,12 +168,15 @@ python scripts/fetch_readmes.py --inventory "<workspace>/github-stars.json" --ou
 # 3. （agent）读 README 分类后用脚本记录
 python scripts/write_classification.py --classifications records.json --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --ledger-name incremental-20260802-ledger
 
-# 4. 离线计划 → 在线计划（审阅 planHash）
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
+# 4. 离线计划 → 在线计划（审阅 planHash；mapping 用第 3 步的窄 ledger）
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/incremental-20260802-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --offline-plan
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/incremental-20260802-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
 
 # 5. 凭批准计划写回
-python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
+python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/incremental-20260802-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --apply --approved-plan "<workspace>/github-stars-sync-plan.json"
+
+# 6. 把窄 ledger 合并回完整记录（先快照）
+python scripts/write_classification.py --classifications records.json --inventory "<workspace>/github-stars.json" --out-dir "<workspace>" --ledger-name incremental-20260802-ledger --merge-into-full "<workspace>/star-readmes/complete-ledger.json"
 ```
 
 ## 脚本
@@ -204,6 +210,6 @@ cd scripts
 python -m pytest tests/ -q
 ```
 
-37 个测试覆盖 meta 合并、增量语料保留、ledger 校验、planHash 完整性、漂移审计语义、分类记录、批次切分/合并、网络重试——全部离线（GitHub 调用被 mock）。
+43 个测试覆盖 meta 合并、增量语料保留、ledger 校验、planHash 完整性、漂移审计语义、分类记录、批次切分/合并、网络重试——全部离线（GitHub 调用被 mock）。
 
 详细的 agent 操作规程见 [SKILL.md](SKILL.md)。

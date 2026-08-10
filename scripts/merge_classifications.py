@@ -91,6 +91,7 @@ def validate_batch_records(batch_repos, records, batch_name, taxonomy_names):
             continue
         if any(not isinstance(entry, str) for entry in final_lists):
             issues.append(f"{batch_name}: {name} finalLists entries must be strings")
+            continue
         if len(set(final_lists)) != len(final_lists):
             issues.append(f"{batch_name}: {name} finalLists contains duplicate list names")
         unknown = sorted(list_name for list_name in final_lists if list_name not in taxonomy_names)
@@ -137,6 +138,16 @@ def main():
             expected_count = split_summary.get("batches")
         except (json.JSONDecodeError, UnicodeDecodeError):
             split_summary = None
+            print(
+                f"WARNING: {split_summary_path} is unreadable; batch-set completeness not verified",
+                file=sys.stderr,
+            )
+    else:
+        print(
+            "WARNING: split-summary.json not found; batch-set completeness not verified "
+            "(missing batches would silently under-cover). Run split_manifest.py first.",
+            file=sys.stderr,
+        )
     batch_indexes = sorted(int(path.stem.split("-")[1]) for path in batch_files)
     if expected_count is not None and batch_indexes != list(range(1, expected_count + 1)):
         raise ValueError(
@@ -168,6 +179,17 @@ def main():
         if records_error:
             all_issues.append(records_error)
             per_batch.append({"batch": batch_index, "path": str(records_path), "error": records_error, "expected": len(batch_repos)})
+            continue
+        # A records file older than its batch manifest is a leftover from a
+        # previous split/reclassification run; merging it silently would
+        # propagate stale classifications.
+        if records_path.stat().st_mtime < batch_path.stat().st_mtime:
+            issue = (
+                f"{records_path.name} is older than {batch_path.name}; "
+                "delete stale batch-*-records.json files and re-run the subagents"
+            )
+            all_issues.append(issue)
+            per_batch.append({"batch": batch_index, "path": str(records_path), "error": issue, "expected": len(batch_repos)})
             continue
         if not isinstance(records, list):
             all_issues.append(f"batch-{batch_index}: batch-{batch_index}-records.json must be a JSON list")

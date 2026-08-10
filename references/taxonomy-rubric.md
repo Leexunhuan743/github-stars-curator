@@ -199,6 +199,10 @@ Common confusions:
 
 ### `dev-tools`
 
+Definition:
+
+`Developer tools, editors, local engineering utilities, coding workflow tools, and static-site or publishing pipelines.`
+
 Use this as the default bucket for traditional development tools. This is where editors, documentation browsers, code-processing tools, local engineering helpers, and static-site or publishing pipelines should go when they are not primarily AI-agent infrastructure.
 
 Belongs here:

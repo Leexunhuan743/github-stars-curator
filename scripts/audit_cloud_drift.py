@@ -160,7 +160,9 @@ def main() -> int:
     if len(repo_drift) > 20:
         print(f"... {len(repo_drift) - 20} more drifted repos")
     print(f"Wrote: {out_path}")
-    return 1 if repo_drift else 0
+    # localNotLive-only drift is the expected pre-sync state (newly
+    # classified repos); only liveNotLocal is a stop-and-reconcile signal.
+    return 1 if live_not_local else 0
 
 
 if __name__ == "__main__":

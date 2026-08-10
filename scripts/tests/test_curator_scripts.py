@@ -108,7 +108,7 @@ def test_incremental_readme_run_preserves_full_manifest_and_enrichment(
     )
     delta.write_text(json.dumps({"newStars": ["owner/two"]}), encoding="utf-8")
     monkeypatch.setattr(
-        readmes, "fetch_readme", lambda owner, repo: f"# {repo}"
+        readmes, "fetch_readme_bytes", lambda owner, repo: f"# {repo}".encode("utf-8")
     )
     monkeypatch.setattr(
         sys,
@@ -153,6 +153,10 @@ def test_incremental_readme_run_preserves_full_manifest_and_enrichment(
     ]
     assert preserved["summary"] == "Manual summary"
     assert preserved["classificationStatus"] == "reviewed"
+    # --only-new-from must actually restrict the fetch (discriminating assert)
+    summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8"))
+    assert summary["selected"] == 1
+    assert summary["fetched"] == 1
 
 
 def test_inventory_output_binds_owner_login(tmp_path, monkeypatch):
@@ -1169,8 +1173,9 @@ def test_merge_classifications_detects_cross_batch_duplicates(tmp_path, monkeypa
     assert report["crossBatchDuplicates"] == ["owner/a"]
 
 
-def test_with_retries_retries_network_errors_only():
+def test_with_retries_retries_network_errors_only(monkeypatch):
     apply_lists = load_module(APPLY_SCRIPT, "apply_lists_retry_test")
+    monkeypatch.setattr(apply_lists.time, "sleep", lambda _: None)
 
     calls = []
     def flaky():
@@ -1258,14 +1263,19 @@ def test_is_network_error_excludes_http_4xx():
     # a 4xx response mentioning a token word is permanent, never retried
     assert not apply_lists.is_network_error("gh: Validation Failed: name 'network' (HTTP 422)")
     assert not apply_lists.is_network_error("gh: Not Found (HTTP 404)")
+    # a 5xx is a transient server-side failure, retried
+    assert apply_lists.is_network_error("gh: Internal Server Error (HTTP 500)")
+    assert apply_lists.is_network_error("gh: Bad Gateway (HTTP 502)")
+    assert apply_lists.is_network_error("gh: Service Unavailable (HTTP 503)")
     # genuine transient failures still classify
     assert apply_lists.is_network_error("dial tcp: connection refused")
     assert apply_lists.is_network_error("TLS handshake timeout")
     assert apply_lists.is_network_error("unexpected EOF")
 
 
-def test_with_retries_exhausts_then_reraises():
+def test_with_retries_exhausts_then_reraises(monkeypatch):
     apply_lists = load_module(APPLY_SCRIPT, "apply_lists_retry_exhaust_test")
+    monkeypatch.setattr(apply_lists.time, "sleep", lambda _: None)
     calls = []
 
     def always_fails():

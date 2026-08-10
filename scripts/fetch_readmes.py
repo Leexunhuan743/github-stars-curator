@@ -75,6 +75,13 @@ def write_text_atomic(path, body):
     tmp_path.replace(path)
 
 
+def write_bytes_atomic(path, body):
+    path = Path(path)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    tmp_path.write_bytes(body)
+    tmp_path.replace(path)
+
+
 def normalize_inventory(payload):
     if isinstance(payload, list):
         return payload
@@ -90,15 +97,16 @@ def load_delta_names(path):
     return set(payload.get("newStars", []))
 
 
-def fetch_readme(owner, repo):
-    return run_gh(
-        [
-            "api",
-            f"repos/{owner}/{repo}/readme",
-            "-H",
-            "Accept: application/vnd.github.raw+json",
-        ]
+def fetch_readme_bytes(owner, repo):
+    """Fetch the raw README as bytes; preserves non-UTF-8 (GBK/Latin-1) bodies."""
+    result = subprocess.run(
+        ["gh", "api", f"repos/{owner}/{repo}/readme", "-H", "Accept: application/vnd.github.raw+json"],
+        capture_output=True,
     )
+    if result.returncode != 0:
+        error = (result.stderr or result.stdout).decode("utf-8", errors="replace").strip() or "gh failed"
+        raise RuntimeError(error)
+    return result.stdout
 
 
 def classify_readme_error(message):
@@ -183,7 +191,18 @@ def main():
     inventory = normalize_inventory(load_json(args.inventory))
     selected = inventory
     if args.only_new_from:
+        delta_path = Path(args.only_new_from)
+        if not delta_path.exists():
+            raise ValueError(
+                f"Delta file not found: {args.only_new_from}. "
+                "Refresh it first with fetch_star_inventory.py; it is regenerated on every inventory run."
+            )
         wanted = load_delta_names(args.only_new_from)
+        if not wanted:
+            raise ValueError(
+                f"Delta file {args.only_new_from} has no newStars; "
+                "the inventory was probably refreshed after the delta was produced. Re-run fetch_star_inventory.py."
+            )
         selected = [item for item in inventory if item["nameWithOwner"] in wanted]
 
     out_dir = Path(args.out_dir).resolve()
@@ -214,9 +233,9 @@ def main():
             "attemptedAt": attempted_at,
         }
         try:
-            body = fetch_readme(owner, repo)
-            write_text_atomic(readme_path, body)
-            fetch_result["bytes"] = len(body.encode("utf-8"))
+            body = fetch_readme_bytes(owner, repo)
+            write_bytes_atomic(readme_path, body)
+            fetch_result["bytes"] = len(body)
             fetched += 1
         except Exception as exc:
             error = str(exc)

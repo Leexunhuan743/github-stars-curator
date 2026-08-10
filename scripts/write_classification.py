@@ -19,8 +19,12 @@ Usage:
         --inventory <workspace>/github-stars.json \
         --out-dir <workspace> \
         --ledger-name incremental-20260801-ledger \
-        --merge-into-full <workspace>/star-readmes/complete-classification-ledger.json \
+        --merge-into-full <workspace>/star-readmes/complete-ledger.json \
         --prune-removed <workspace>/github-stars.json
+
+(The ledger written by this script lands at <out-dir>/star-readmes/<ledger-name>.json;
+the actual full-ledger filename in a workspace may carry a bucket-count suffix
+such as complete-25bucket-ledger.json — pass whatever the workspace uses.)
 
 --merge-into-full snapshots the full ledger, then replaces every same-name
 assignment with this run's entry (adding the rest) and writes it back, so a
@@ -35,7 +39,7 @@ The --classifications file is a JSON list of objects. Each object requires:
       "finalLists": ["list-a", "list-b"]
     }
 
-Optional fields: summary, reason, confidence, facets, platforms,
+Optional fields: summary, reason, confidence, primaryFunction, facets, platforms,
 candidateLists, signals, classificationStatus, productType.
 Unknown list names and repos missing from the inventory are rejected.
 """
@@ -103,9 +107,13 @@ def normalize_classifications(records, product_type, taxonomy_names):
             raise ValueError(f"Classification entry missing nameWithOwner: {record!r}")
         if not isinstance(final_lists, list) or not final_lists:
             raise ValueError(f"{name}: finalLists must be a non-empty list.")
+        if any(not isinstance(list_name, str) for list_name in final_lists):
+            raise ValueError(f"{name}: finalLists entries must be strings.")
         unknown.update(list_name for list_name in final_lists if list_name not in taxonomy_names)
         candidate = record.get("candidateLists")
         if isinstance(candidate, list):
+            if any(not isinstance(candidate_name, str) for candidate_name in candidate):
+                raise ValueError(f"{name}: candidateLists entries must be strings.")
             unknown.update(list_name for list_name in candidate if list_name not in taxonomy_names)
         entry = {
             "nameWithOwner": name,

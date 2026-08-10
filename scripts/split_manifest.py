@@ -133,8 +133,17 @@ def main():
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     total = len(entries)
-    base, remainder = divmod(total, args.batches)
-    batch_sizes = [base + (1 if index < remainder else 0) for index in range(args.batches)]
+    if total == 0:
+        raise ValueError("inventory contains no repos; nothing to split. Refresh the inventory first.")
+    if args.batches > total:
+        print(
+            f"WARNING: --batches {args.batches} exceeds the repo count {total}; "
+            f"only {total} batch file(s) will be written.",
+            file=sys.stderr,
+        )
+    effective_batches = min(args.batches, total)
+    base, remainder = divmod(total, effective_batches)
+    batch_sizes = [base + (1 if index < remainder else 0) for index in range(effective_batches)]
 
     cursor = 0
     written = []
@@ -144,6 +153,17 @@ def main():
         batch_path = out_dir / f"batch-{index}.json"
         write_json(batch_path, batch)
         written.append({"batch": index, "path": str(batch_path), "repos": len(batch)})
+
+    # Remove stale higher-index batch files from an earlier, larger split so
+    # merge_classifications' completeness check sees only the current set.
+    stale = [
+        path for path in out_dir.glob("batch-*.json")
+        if re.fullmatch(r"batch-\d+\.json", path.name)
+        and int(path.stem.split("-")[1]) > effective_batches
+    ]
+    for path in stale:
+        path.unlink(missing_ok=True)
+        print(f"Removed stale batch file: {path.name}", file=sys.stderr)
 
     summary = {
         "generatedAt": sync.utc_now(),

@@ -42,10 +42,13 @@ def utc_now():
 
 def is_network_error(message):
     normalized = message.lower()
-    # gh prints API failures as "... (HTTP <code>)"; a 4xx is a permanent
+    # gh prints API failures as "... (HTTP <code>)". A 4xx is a permanent
     # rejection, never transient, even if its body mentions a token word.
+    # A 5xx is a server-side transient failure worth retrying.
     if re.search(r"\(http 4\d\d\)", normalized):
         return False
+    if re.search(r"\(http 5\d\d\)", normalized):
+        return True
     return any(token in normalized for token in NETWORK_ERROR_TOKENS)
 
 
@@ -715,6 +718,7 @@ def plan_hash_payload(plan):
                 "repoId": item["repoId"],
                 "repoIdFound": item["repoIdFound"],
                 "finalLists": item["finalLists"],
+                "currentLists": item["currentLists"],
                 "currentManagedLists": item["currentManagedLists"],
                 "preservedUnmanagedLists": item["preservedUnmanagedLists"],
                 "missingListNames": item["missingListNames"],
@@ -956,15 +960,20 @@ def main():
                 # createUserList is the one non-idempotent mutation: if a
                 # previous attempt committed but the response was lost, the
                 # retry must adopt the existing list instead of creating a
-                # duplicate. Re-fetch viewer lists first and reuse by name.
-                viewer = fetch_viewer_state()
-                for candidate in viewer["lists"]:
-                    if candidate["name"] == list_name:
-                        return candidate
-                return create_list(
-                    list_name,
-                    taxonomy["descriptions"].get(list_name, FALLBACK_LIST_DESCRIPTION),
-                )
+                # duplicate. Try the create first; on a transient network
+                # error, reconcile by re-fetching viewer lists and reusing a
+                # same-name list before any retry attempt.
+                try:
+                    return create_list(
+                        list_name,
+                        taxonomy["descriptions"].get(list_name, FALLBACK_LIST_DESCRIPTION),
+                    )
+                except NetworkError:
+                    viewer = fetch_viewer_state()
+                    for candidate in viewer["lists"]:
+                        if candidate["name"] == list_name:
+                            return candidate
+                    raise
 
             created = with_retries(create_reconciled, retries)
             existing_by_name[list_name] = created
@@ -1074,6 +1083,14 @@ def main():
         "journalPath": str(journal_path),
     }
     write_json(out_dir / "github-stars-writeback-summary.json", summary)
+    # The membership cache now holds pre-writeback state while its list-state
+    # fingerprint still matches (the fingerprint binds list metadata only, not
+    # memberships). Delete it so a later --use-membership-cache run cannot
+    # silently apply stale memberships over manual GitHub edits.
+    try:
+        membership_cache_path.unlink(missing_ok=True)
+    except OSError:
+        pass
     print(f"Updated repos: {updated}")
     print(f"Skipped unchanged repos: {skipped_unchanged}")
     if plan["absentRepos"]:

@@ -20,7 +20,7 @@ Any mutation of GitHub star lists, gated behind offline plan, then online plan, 
 
 ## Narrow Incremental Ledger
 
-A ledger containing only the repos intentionally changed in the current run, each with its current live lists plus desired lists in `finalLists`. The drift-safe alternative to re-applying an old full ledger. It is merged back into the full record with `write_classification.py --merge-into-full`: that command snapshots the full ledger, then replaces same-name assignments with the narrow entries and adds the rest, so stale list assignments cannot survive a merge.
+A ledger containing only the repos intentionally changed in the current run; each repo's `finalLists` must include its current live *managed* lists plus the new desired lists (current memberships are fetched live at apply time, not stored in the ledger). The drift-safe alternative to re-applying an old full ledger. It is merged back into the full record with `write_classification.py --merge-into-full`: that command snapshots the full ledger, then replaces same-name assignments with the narrow entries and adds the rest, so stale list assignments cannot survive a merge.
 
 ## Unmanaged List
 
