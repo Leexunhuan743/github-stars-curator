@@ -217,12 +217,14 @@ def main():
     failed = []
     selected_names = {item["nameWithOwner"] for item in selected}
 
-    for item in selected:
+    total_selected = len(selected)
+    for index, item in enumerate(selected, start=1):
         owner, repo = item["nameWithOwner"].split("/", 1)
         slug = safe_slug(item["nameWithOwner"])
         readme_path = raw_dir / f"{slug}.md"
         meta_path = meta_dir / f"{slug}.json"
         previous = existing_meta(meta_path)
+        print(f"  [{index}/{total_selected}] {item['nameWithOwner']}", flush=True)
 
         attempted_at = utc_now()
         fetch_result = {

@@ -124,6 +124,7 @@ def main() -> int:
             live_by_repo.setdefault(name, set())
 
     repo_drift, list_drift = summarize_drift(local_by_repo, live_by_repo)
+    live_not_local = any(item["liveNotLocal"] for item in repo_drift)
     report = {
         "schemaVersion": 1,
         "generatedAt": sync.utc_now(),
@@ -135,6 +136,7 @@ def main() -> int:
         "auditedRepoCount": len(target_names),
         "driftRepoCount": len(repo_drift),
         "hasDrift": bool(repo_drift),
+        "hasStopSignal": live_not_local,
         "repoDrift": repo_drift,
         "listDrift": list_drift,
     }
@@ -144,7 +146,6 @@ def main() -> int:
 
     print(f"Audited repos: {report['auditedRepoCount']}")
     print(f"Repos with drift: {report['driftRepoCount']}")
-    live_not_local = any(item["liveNotLocal"] for item in repo_drift)
     only_local_not_live = bool(repo_drift) and not live_not_local
     if only_local_not_live:
         print(
@@ -163,7 +164,6 @@ def main() -> int:
     # localNotLive-only drift is the expected pre-sync state (newly
     # classified repos); only liveNotLocal is a stop-and-reconcile signal.
     return 1 if live_not_local else 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

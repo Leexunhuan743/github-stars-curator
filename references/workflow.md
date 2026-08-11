@@ -48,7 +48,11 @@ After writeback, merge the narrow ledger back into the full ledger record with `
 
 Use this mode before every online writeback. The user cannot be relied on to report manual edits; check for cloud drift proactively by reading live memberships and comparing them with the local ledger.
 
-Principle: live GitHub list membership is the newest fact when it differs from the local ledger. The local ledger is a working record, not permission to overwrite cloud edits.
+Principle: deliberate live GitHub list edits are the newest fact when they differ from the local ledger. The local ledger is a working record, not permission to overwrite cloud edits.
+
+**Drift is not always "cloud is newer".** Live memberships win when the user intentionally edited the cloud. But an *accidental* cloud edit (e.g. dragging a repo into the wrong list in the GitHub UI) is a mistake, not an intent: the ledger classification is the correct target and apply should overwrite the cloud with it — `apply_user_lists.py` does this by setting the full desired list set per repo.
+
+How to tell the two apart: look at what the ledger says. If the ledger entry looks like the intentional classification (a sensible list for the repo) and the cloud membership looks like a scatter of unrelated lists, treat the ledger as correct and let apply overwrite. If the cloud change looks deliberate (repo moved between plausible lists, removed from a list it clearly no longer belongs in), preserve it per the reconciliation steps below.
 
 Recommended order:
 
@@ -78,7 +82,7 @@ The command exits zero when there is no drift (or only expected pre-sync `localN
 
 ## Artifacts worth keeping
 
-- `github-stars.json`: latest full repo inventory
+- `github-stars.json`: latest full repo inventory (shape: `{schemaVersion, generatedAt, ownerLogin, repositories: [{id, nameWithOwner, ...}]}` — the repo list lives under `repositories`, not `items`; write scripts and hand-rolled merges must read that field)
 - `github-stars-delta.json`: changes since the previous scan
 - `star-readmes/raw/*.md`: README corpus
 - `star-readmes/meta/*.json`: per-repo metadata stubs and enrichments
@@ -151,6 +155,18 @@ gh api graphql -f query='mutation($id: ID!) { deleteUserList(input: {listId: $id
 
 Deleting a list removes its memberships; repos stay in their other lists. After any list deletion, or after an apply interrupted mid-run, rerun the online plan: already-created lists are not re-created (missing lists = 0) and repo updates resume idempotently.
 
+## Ledger naming and merging
+
+`write_classification.py` writes its ledger to `<out-dir>/star-readmes/<ledger-name>.json` (`--ledger-name`, default `classification-ledger`). **`--ledger-name` names the narrow ledger file, not the merge target.**
+
+`--merge-into-full <path>` reads the FULL ledger at `<path>`, snapshots it next to itself (`<stem>.before-<name>-<timestamp>.json`), replaces same-name assignments with this run's entries, adds the rest, and writes the merged result back to `<path>`. It never writes to the `--ledger-name` file. After a merge, the full ledger file (`<path>`) holds the combined record; the narrow `--ledger-name` file still holds only this run's repos.
+
+The workflow is: narrow ledger (plan/apply against it) → merge into the full ledger with `--merge-into-full` → keep the full ledger as the canonical record.
+
+## README path mapping
+
+The corpus stores one README per repo at `star-readmes/raw/<slug>.md` where `<slug>` is the `nameWithOwner` with `/` replaced by `__` (`owner/repo` → `owner__repo`). Meta files use the same slug (`star-readmes/meta/<slug>.json`). Anything that maps repo names to corpus paths must apply the same rule.
+
 ## Bucket overload review
 
 When any managed list holds more than roughly one tenth of the total star count (with a floor of 30 repos, so small star sets do not trip it) — or clearly outgrows the rest, at roughly double the median bucket size — pause the classification flow and run this review. The `everything-else` fallback deserves the same treatment when it grows past the same threshold: that is the clearest signal that the taxonomy is missing buckets.
@@ -190,6 +206,8 @@ python scripts/split_manifest.py --inventory "<workspace>/github-stars.json" --b
 ```
 
 `finalLists` is required and must be a non-empty list of taxonomy list names; every repo in the batch needs exactly one record.
+
+Give each subagent the full `references/taxonomy-rubric.md` bucket definitions (or point it at the workspace taxonomy) and require it to return, alongside the records, a short per-batch list distribution (count per list) so a batch that returns only "classified" boilerplate is caught by inspection. Subagents can fail or return nothing — after they finish, verify every `batch-N-records.json` exists before merging (missing files fail `merge_classifications.py` with a clear error; re-run the failed subagent).
 
 3. Validate and combine with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, cross-batch duplicate checks). It refuses to write `records.json` until every batch validates:
 

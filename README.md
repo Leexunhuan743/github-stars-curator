@@ -14,7 +14,7 @@ An agent skill (Codex, Claude Code, and other SKILL.md-compatible agents) that o
 - **Classification** — an agent reads the READMEs (not just descriptions) and assigns repos to a reusable taxonomy; scripted recording with list-name validation.
 - **General-purpose taxonomy** — a bundled 23-bucket taxonomy (personal software, AI/agent tooling, self-hosted services, developer infrastructure, and a fallback), extendable per workspace. A 500-repo probe and a 300-repo random sample both confirm ~90%+ reasonable placement of classifiable repos.
 - **Bucket overload review** — when a bucket exceeds ~10% of the total star count (floor 30), the agent analyzes its contents, proposes concrete splits, and asks before creating new lists (recorded in the workspace taxonomy only).
-- **Cloud drift audit** — read live GitHub list memberships before any writeback; live state wins when it differs from the local ledger.
+- **Cloud drift audit** — read live GitHub list memberships before any writeback; deliberate live edits win, accidental ones are corrected to the ledger's intent at apply.
 - **Safe writeback** — offline plan → online plan (review `planHash`) → apply with an approved plan; unmanaged lists are preserved by default, and deleting any list requires explicit user approval.
 
 ## Install
@@ -79,7 +79,7 @@ python scripts/write_classification.py --classifications records.json --inventor
 - `split_manifest.py` — split the inventory into balanced batches for parallel subagent classification.
 - `merge_classifications.py` — validate and merge per-batch classification results (JSON-integrity, 1:1 coverage, list-name whitelist, cross-batch duplicates).
 - `write_classification.py` — record agent classifications into meta files and emit a ledger; validates list names against the taxonomy; `--merge-into-full` merges a narrow ledger back into the full record with a snapshot, and `--prune-removed` drops unstarred repos from it.
-- `audit_cloud_drift.py` — read-only live-vs-ledger drift audit before writeback; exit code 0 = no drift, non-zero = reconcile.
+- `audit_cloud_drift.py` — read-only live-vs-ledger drift audit before writeback; exit code 0 = no drift or only expected pre-sync `localNotLive` drift, non-zero = `liveNotLocal` reconcile signal.
 - `apply_user_lists.py` — offline plan / online plan / apply (creates missing lists in taxonomy order, updates descriptions and memberships, writes an audit journal); `--retry N` retries transient network errors per mutation.
 
 ## Taxonomy
@@ -91,7 +91,7 @@ A workspace can extend it by copying the template to `<workspace>/taxonomy.yaml`
 ## Safety model
 
 - **Plan, review, then mutate.** Every writeback goes through offline plan → online plan (review `planHash`) → apply with `--approved-plan`; a tampered or stale plan is refused.
-- **Live state is the newest fact.** Cloud drift is checked proactively before writeback; local ledgers never silently overwrite manual cloud edits.
+- **Deliberate live edits win; accidents don't.** Cloud drift is checked proactively before writeback; deliberate manual cloud edits are preserved (local ledgers never silently overwrite them), while an accidental cloud edit (repo in the wrong list) is corrected back to the ledger's intent at apply.
 - **Unmanaged lists are preserved by default.** Lists outside the loaded taxonomy are left alone; when they are discovered, the user is asked whether to delete them, and deletion happens only with explicit approval.
 - **Unexpected removals stop the flow.** Any `listsToRemove` outside the current request is a pause-and-review signal.
 - **Human checkpoints.** Bucket overload, taxonomy drift, single-repo new lists, and auth gaps all pause for review.
@@ -186,7 +186,7 @@ python scripts/write_classification.py --classifications records.json --inventor
 - `split_manifest.py`：把清单切成均衡批次，供并行子代理分类；
 - `merge_classifications.py`：校验并合并各批分类结果（JSON 完整性、1:1 覆盖、列表名白名单、跨批重复）；
 - `write_classification.py`：记录分类到 meta 并生成 ledger，校验列表名；`--merge-into-full` 把窄增量合并回完整 ledger（先快照），`--prune-removed` 从中剔除已取消 star 的仓库；
-- `audit_cloud_drift.py`：写回前只读漂移审计（exit 0 = 无漂移，非零 = 需协调）；
+- `audit_cloud_drift.py`：写回前只读漂移审计（exit 0 = 无漂移或仅预期的 pre-sync `localNotLive` 漂移，非零 = `liveNotLocal` 需协调信号）；
 - `apply_user_lists.py`：离线/在线计划与 apply（按 taxonomy 顺序创建缺失列表、更新描述与成员、写审计 journal）；`--retry N` 每次变更自动重试瞬时网络错误。
 
 ## Taxonomy
@@ -198,7 +198,7 @@ python scripts/write_classification.py --classifications records.json --inventor
 ## 安全模型
 
 - **先计划、再审阅、后写回**：离线计划 → 在线计划（审阅 planHash）→ 凭 `--approved-plan` apply；篡改或过期的计划会被拒绝；
-- **live 状态是更新的事实**：写回前主动查云漂移，本地 ledger 绝不静默覆盖云端手动修改；
+- **有意的 live 修改优先，误操作不优先**：写回前主动查云漂移；用户有意的云端手动修改被保留（本地 ledger 绝不静默覆盖），而误操作（repo 被拖进错误列表）在 apply 时按 ledger 意图纠正；
 - **unmanaged 列表默认保留**：taxonomy 之外的云端列表不碰；发现时询问用户是否删除，删除仅凭明确同意；
 - **意外移除即暂停**：请求之外的任何 `listsToRemove` 都是停止复查信号；
 - **人工检查点**：桶超载、taxonomy 漂移、单 repo 新列表、鉴权不足都会暂停。

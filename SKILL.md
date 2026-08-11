@@ -34,7 +34,7 @@ The bundled 23-bucket taxonomy is a general-purpose classification: personal sof
 2. Verify `gh auth status` before any writeback. For GitHub star list mutations, the token needs a scope set that includes `user`.
 3. Treat the local corpus and ledger as the working memory, but treat GitHub as the final source of truth for list membership after writeback.
 4. Assume classification is iterative. New or ambiguous repos can stay in the `everything-else` fallback bucket until the next pass.
-5. Before any online writeback, proactively check for cloud drift even if the user did not mention manual edits. Read live GitHub memberships, compare them with the local ledger, and treat live memberships as newer when they differ. Reconcile the local plan with cloud drift, or use a narrow incremental ledger that preserves each target repo's current live lists. Do not apply an old full ledger over possible manual cloud edits.
+5. Before any online writeback, proactively check for cloud drift even if the user did not mention manual edits. Read live GitHub memberships, compare them with the local ledger, and treat live memberships as newer when they differ **only when the cloud edit looks deliberate** — an accidental cloud edit (repo dragged into the wrong list in the UI) should be overwritten by the ledger's intent, which apply does by setting the full desired list set (see `references/workflow.md`, Cloud drift audit and reconciliation mode). Reconcile the local plan with deliberate cloud drift, or use a narrow incremental ledger that preserves each target repo's current live lists. Do not apply an old full ledger over possible manual cloud edits.
 6. For local-only work (taxonomy design, offline review), run only the offline steps: classification, ledger validation, and offline planning make no GitHub calls — skip inventory and README fetches.
 7. Ledger shape is validated from `references/classification-ledger.schema.json`; keep that schema as the source for assignment field rules.
 8. Deleting any GitHub list is destructive and irreversible. Unmanaged lists (see `references/glossary.md`) are preserved by default; when the online plan or drift audit reveals them, ask the user whether to delete them — never delete without explicit approval (see `references/workflow.md`, Cleaning up unmanaged lists).
@@ -165,13 +165,15 @@ python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-
 
 Then run online plan mode. This checks existing GitHub lists, stale descriptions, missing lists, and current list membership before mutation. Review the generated `planHash`.
 
+The `--mapping` file is the ledger to sync. For a narrow run, pass the step-3 narrow ledger (e.g. `star-readmes/incremental-20260802-ledger.json`); the `complete-ledger.json` in the commands below is the full-record form used for full reclassifications or after merging the narrow ledger back (`--merge-into-full`).
+
 ```bash
 python scripts/apply_user_lists.py --mapping "<workspace>/star-readmes/complete-ledger.json" --inventory "<workspace>/github-stars.json" --out-dir "<workspace>"
 ```
 
 Online plan reads live GitHub data and writes a membership cache; `--use-membership-cache` is only for a deliberately reviewed rerun (details in `references/workflow.md`, List sync safety).
 
-Before applying, run an online plan or `scripts/audit_cloud_drift.py` to compare live memberships with the local ledger. Live memberships win when they differ: reconcile via `references/workflow.md` (cloud drift audit and reconciliation mode), merging cloud edits back into the full ledger or writing a narrow incremental ledger that preserves each target repo's current live lists in `finalLists`.
+Before applying, run an online plan or `scripts/audit_cloud_drift.py` to compare live memberships with the local ledger. Deliberate cloud edits win and are reconciled via `references/workflow.md` (cloud drift audit and reconciliation mode) — merging cloud edits back into the full ledger or writing a narrow incremental ledger that preserves each target repo's current live lists in `finalLists`. An accidental cloud edit (repo dragged into the wrong list) is not an intent: the ledger is the target and apply overwrites it (see Precondition 5).
 
 Then apply the reviewed plan:
 

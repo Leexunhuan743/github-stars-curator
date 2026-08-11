@@ -713,7 +713,8 @@ Use this when the repo acquires data from the web (firecrawl, crawl4ai, instagra
 Common confusions:
 
 - if the tool is for downloading media files rather than harvesting data, use `downloaders`,
-- if it is security/OSINT/penetration tooling, use `security-pentest-tools`.
+- if it is security/OSINT/penetration tooling, use `security-pentest-tools`,
+- if it is a client library/SDK whose main job is fetching data from a platform API (instagrapi, goinsta), it belongs here — `frameworks-libraries` is for general-purpose building blocks, not platform-data clients.
 
 ### `security-pentest-tools`
 

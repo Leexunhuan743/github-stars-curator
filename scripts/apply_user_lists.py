@@ -23,7 +23,6 @@ FALLBACK_LIST_DESCRIPTION = "Starred repositories curated by GitHub Stars Curato
 REPO_NAME_PATTERN = re.compile(r"^[^/]+/[^/]+$")
 
 
-DEFAULT_RETRIES = 0
 NETWORK_ERROR_TOKENS = (
     "timeout",
     "timed out",
@@ -928,6 +927,17 @@ def main():
         removes = sum(1 for item in needing if item["managedListsToRemove"])
         print(f"Repos needing update: {len(needing)} ({adds} with adds, {removes} with removes)")
         print(f"Repos already correct (skipped): {len(unchanged)}")
+        # Unmanaged lists exist in the cloud but outside the managed taxonomy;
+        # they are preserved by default, but the operator should know they exist.
+        unmanaged_names = sorted(
+            name for name in existing_by_name if name not in taxonomy["names"]
+        )
+        if unmanaged_names:
+            print(
+                f"Unmanaged lists in the cloud (preserved, not touched): {len(unmanaged_names)}"
+            )
+            for name in unmanaged_names:
+                print(f"  - {name}")
         if plan["absentRepos"]:
             print(f"Absent repos (not in inventory, not applied): {len(plan['absentRepos'])}")
             for absent in plan["absentRepos"]:

@@ -25,7 +25,7 @@ These are practical lessons from a working run:
 5. List description updates can be done with `updateUserList`.
 6. A clean source-of-truth ledger makes reruns much safer than editing lists ad hoc in the UI.
 7. Treat `updateUserListsForItem` as a complete list-membership update for the item. Preserve non-taxonomy list IDs unless the user explicitly requests replacement.
-8. The agent must not depend on the user to report manual GitHub edits. Before writeback, perform a fresh live membership read or drift audit; when live membership differs from the local ledger, the local ledger is stale until reconciled.
+8. The agent must not depend on the user to report manual GitHub edits. Before writeback, perform a fresh live membership read or drift audit. When a deliberate live edit differs from the local ledger, the local ledger is stale until reconciled; an accidental live edit (repo in the wrong list) is not intent and apply overwrites it with the ledger.
 
 ## Operational guidance
 

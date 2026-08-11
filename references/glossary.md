@@ -8,7 +8,7 @@ The local JSON record of repo-to-list assignments (`star-readmes/*-ledger.json`)
 
 ## Drift
 
-Any difference between live GitHub list membership and the local ledger. Live membership is the newest fact. `localNotLive`-only drift is the expected pre-sync state of newly classified repos; `liveNotLocal` is a stop-and-reconcile signal.
+Any difference between live GitHub list membership and the local ledger. `localNotLive`-only drift is the expected pre-sync state of newly classified repos; `liveNotLocal` is a stop-and-reconcile signal. Live membership is not always authoritative: a deliberate cloud edit wins, but an accidental one (a repo dragged into the wrong list) is overwritten by the ledger's intent at apply (see `references/workflow.md`, Cloud drift audit).
 
 ## PlanHash
 
