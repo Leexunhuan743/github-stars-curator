@@ -1,6 +1,6 @@
 ---
 name: github-stars-curator
-description: Organize starred GitHub repos into stable, clear lists: detect new stars, download READMEs into a local corpus, classify each repo against the taxonomy, and sync the approved mapping back to GitHub via gh. Use this when a user wants their starred repos sorted into lists, a recent batch of new stars filed incrementally, or their star-list taxonomy reviewed and refined.
+description: "Organize starred GitHub repos into stable, clear lists: detect new stars, download READMEs into a local corpus, classify each repo against the taxonomy, and sync the approved mapping back to GitHub via gh. Use this when a user wants their starred repos sorted into lists, a recent batch of new stars filed incrementally, or their star-list taxonomy reviewed and refined."
 ---
 
 # GitHub Stars Curator
