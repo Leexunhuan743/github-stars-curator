@@ -57,6 +57,8 @@ Unless the user specifies another path, create or reuse a workspace folder like:
   github-stars-delta.json
   taxonomy.yaml
   github-stars-sync-plan.json
+  github-stars-cloud-drift-report.json
+  github-stars-membership-cache.json
   github-stars-writeback-summary.json
   github-stars-writeback-journal.jsonl
 ```

@@ -4,19 +4,9 @@ This skill works best as a repeatable maintenance loop rather than a one-off dum
 
 ## Recommended order
 
-1. Refresh the star inventory and compute the delta.
-2. Fetch READMEs for all stars or only the new stars.
-3. Read README content and enrich the per-repo metadata.
-4. Refine the taxonomy only after reading real content.
-5. Check `<workspace>/taxonomy.yaml` before classifying: if it exists it overrides the bundled template for all scripts — confirm the ledger's list names resolve against it, and keep it in sync when the user adds custom lists.
-6. Generate a classification ledger (the human-readable summary is the step-7 offline plan's console counts, not a separate artifact).
-7. Run list sync in offline plan mode.
-8. Verify GitHub access with `gh auth status`.
-9. Run online plan mode to inspect existing lists, descriptions, memberships, and `planHash`.
-10. Apply the sync only with the reviewed plan.
-11. Report results and unresolved edge cases.
+The numbered steps live in `SKILL.md` (Workflow); this file is the reference for what happens at each step and why. Keep the sequence itself in SKILL.md so the two cannot drift.
 
-## Why this order matters
+The ordering constraints that matter:
 
 - Inventory first: otherwise you do not know which repos are new, removed, or already processed.
 - README fetch before classification: repo descriptions and topics are often too shallow or misleading.
