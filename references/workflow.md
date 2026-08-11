@@ -177,7 +177,16 @@ When any managed list holds more than roughly one tenth of the total star count 
 4. For clusters with no existing home, evaluate the "New lists are justified only when" conditions from `references/taxonomy-rubric.md` (stable concept, a few repos now or clearly soon, retrieval value, room under the 32-list cap).
 5. Present the user with: the bucket's current count, the cluster breakdown, and concrete split proposals — each with a proposed list name, definition, expected repo count, and the retrieval question it answers.
 6. Ask the user which proposals to adopt (none is a valid answer).
-7. Record adopted lists in `<workspace>/taxonomy.yaml` — the workspace copy is the user's own template, separate from the bundled one; if it does not exist yet, copy `references/taxonomy-template.yaml` there first. Then reclassify the affected repos into the new lists, update the ledger, and continue with the normal offline/online plan.
+7. Record adopted lists in `<workspace>/taxonomy.yaml` — the workspace copy is the user's own template, separate from the bundled one; create it with `python scripts/init_taxonomy.py --out-dir "<workspace>"` (copies the bundled template, refuses to overwrite an existing copy). Then apply the split with `scripts/reclassify_bucket.py`, which validates the new list names, rewrites the affected repos' meta entries and narrow ledger, and merges them into the full ledger through the same snapshot-and-replace path as `--merge-into-full`:
+
+```bash
+python scripts/reclassify_bucket.py \
+  --ledger "<workspace>/star-readmes/complete-ledger.json" \
+  --mapping reclassify-mapping.json \
+  --out-dir "<workspace>"
+```
+
+`reclassify-mapping.json` maps each affected repo to its new list(s): `{"owner/repo": ["list-a", "list-b"]}` (or a list of `{nameWithOwner, finalLists}` records). Repos not in the mapping keep their current lists; repos not in the ledger are rejected. Then continue with the normal offline/online plan.
 
 Propose splits only where the cluster is stable and the split serves a real retrieval question; a single lonely sub-theme stays in the parent bucket.
 
@@ -191,7 +200,7 @@ For a full reclassification of hundreds of repos onto changed bucket definitions
 python scripts/split_manifest.py --inventory "<workspace>/github-stars.json" --batches 8 --out-dir "<workspace>/batches" --meta-dir "<workspace>/star-readmes/meta" --ledger "<workspace>/star-readmes/complete-ledger.json"
 ```
 
-2. Give each subagent one `batch-N.json` plus the bucket definitions and explicit re-review instructions for legacy wide buckets (`desktop-apps` / `everything-else` / `self-hosted` / `dev-tools` / `references-guides`); have it write `batch-N-records.json` in the same shape `write_classification.py` accepts:
+2. Give each subagent one `batch-N.json` plus the prompt in `references/batch-classification-prompt-template.md` (it covers bucket definitions, re-review of legacy wide buckets, output shape, and failure behavior; point it at the rubric and taxonomy rather than inlining them). Have it write `batch-N-records.json` in the same shape `write_classification.py` accepts:
 
 ```json
 [
@@ -205,9 +214,7 @@ python scripts/split_manifest.py --inventory "<workspace>/github-stars.json" --b
 ]
 ```
 
-`finalLists` is required and must be a non-empty list of taxonomy list names; every repo in the batch needs exactly one record.
-
-Give each subagent the full `references/taxonomy-rubric.md` bucket definitions (or point it at the workspace taxonomy) and require it to return, alongside the records, a short per-batch list distribution (count per list) so a batch that returns only "classified" boilerplate is caught by inspection. Subagents can fail or return nothing — after they finish, verify every `batch-N-records.json` exists before merging (missing files fail `merge_classifications.py` with a clear error; re-run the failed subagent).
+`finalLists` is required and must be a non-empty list of taxonomy list names; every repo in the batch needs exactly one record. The template requires each subagent to return a per-batch list distribution so a batch that returns only "classified" boilerplate is caught by inspection. Subagents can fail or return nothing — after they finish, verify every `batch-N-records.json` exists before merging (missing files fail `merge_classifications.py` with a clear error; re-run the failed subagent).
 
 3. Validate and combine with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, cross-batch duplicate checks). It refuses to write `records.json` until every batch validates:
 

@@ -20,6 +20,7 @@ Read references only when the task needs them:
 - Read `references/glossary.md` for the meaning of the skill's leading words: ledger, drift, planHash, writeback, narrow incremental ledger, unmanaged list.
 - Read `references/workflow.md` for inventory refreshes, README fetching, local corpus maintenance, or end-to-end runs.
 - Read `references/taxonomy-rubric.md` when classifying repositories, refining buckets, or explaining list placement.
+- Read `references/batch-classification-prompt-template.md` when dispatching parallel subagents for a full reclassification.
 - Read `references/github-graphql-notes.md` before online plan/apply work.
 - Read `references/classification-ledger.schema.json` when validating or extending the ledger shape (see step 5).
 - Use `references/taxonomy-template.yaml` as the bundled machine-readable taxonomy. If `<workspace>/taxonomy.yaml` exists, scripts use that workspace taxonomy instead.
@@ -128,13 +129,13 @@ When the README and metadata disagree, prefer the README.
 
 Record the results with `scripts/write_classification.py` (see Scripts). It validates every list name against the workspace taxonomy, merges the classification fields into `star-readmes/meta/*.json` without touching upstream repo metadata, and emits a ledger file that `apply_user_lists.py` can consume directly. Treat the emitted ledger as the narrow incremental ledger for this run's repos.
 
-For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification). Split the inventory with `scripts/split_manifest.py`, classify each batch in a subagent, then validate and combine the batch results with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, and cross-batch duplicate checks) before recording. The merge validation replaces `write_classification.py`'s validation gate for that path; recording the merged records still goes through `write_classification.py`.
+For a full reclassification of hundreds of repos, use parallel subagents in batches with a strict validation gate — see `references/workflow.md` (Large-scale reclassification). Split the inventory with `scripts/split_manifest.py`, classify each batch in a subagent using the prompt in `references/batch-classification-prompt-template.md`, then validate and combine the batch results with `scripts/merge_classifications.py` (JSON-integrity, 1:1 coverage, list-name whitelist, and cross-batch duplicate checks) before recording. The merge validation replaces `write_classification.py`'s validation gate for that path; recording the merged records still goes through `write_classification.py`.
 
 Done when every repo in scope has non-empty `finalLists` and `classificationStatus` set to `reviewed`, and list names validated against the workspace taxonomy (via `write_classification.py` or the aggregate whitelist check).
 
 ### 4. Refine the taxonomy
 
-Before refining, check whether `<workspace>/taxonomy.yaml` exists: it overrides the bundled template for every script (`choose_taxonomy_path` picks it up automatically when present), so the ledger's list names must resolve against it — flag any mismatch. When the user needs custom lists, create the workspace copy from `references/taxonomy-template.yaml` and edit it there; the workspace file is the user's own template, never the bundled one.
+Before refining, check whether `<workspace>/taxonomy.yaml` exists: it overrides the bundled template for every script (`choose_taxonomy_path` picks it up automatically when present), so the ledger's list names must resolve against it — flag any mismatch. When the user needs custom lists, create the workspace copy with `python scripts/init_taxonomy.py --out-dir "<workspace>"` (copies `references/taxonomy-template.yaml`, refuses to overwrite an existing workspace copy) and edit it there; the workspace file is the user's own template, never the bundled one.
 
 Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the machine source of truth for list names, order, descriptions, and max list count. Use `references/taxonomy-rubric.md` as the human decision rubric. New lists are justified only when:
 
@@ -145,7 +146,7 @@ Use `references/taxonomy-template.yaml` or `<workspace>/taxonomy.yaml` as the ma
 
 If the taxonomy would exceed 32 lists, merge the lowest-value or most overlapping buckets before writeback.
 
-When any bucket holds more than roughly one tenth of the total star count (floor 30) or clearly outgrows the rest — or `everything-else` crosses the same bar — run the bucket overload review before refining anything: analyze what the repos actually are, propose concrete splits, and ask the user which to adopt (see `references/workflow.md`, Bucket overload review). Adopted lists are recorded in `<workspace>/taxonomy.yaml`, the user's own template.
+When any bucket holds more than roughly one tenth of the total star count (floor 30) or clearly outgrows the rest — or `everything-else` crosses the same bar — run the bucket overload review before refining anything: analyze what the repos actually are, propose concrete splits, and ask the user which to adopt (see `references/workflow.md`, Bucket overload review). Adopted lists are recorded in `<workspace>/taxonomy.yaml` (the user's own template), and the split is applied with `scripts/reclassify_bucket.py` from a `{repo: [new lists]}` mapping.
 
 Done when the taxonomy stays at or under the 32-list cap and every list name the ledger uses resolves against the workspace taxonomy.
 
@@ -217,6 +218,8 @@ Done when the report answers every bullet above, including an explicit "none" fo
 - `scripts/split_manifest.py`: split the inventory into balanced batches for parallel subagent classification
 - `scripts/merge_classifications.py`: validate and merge per-batch classification results into one records file (JSON-integrity, 1:1 coverage, list-name whitelist, cross-batch duplicate checks)
 - `scripts/write_classification.py`: merge agent classifications into meta files and emit a ledger; validates list names against the taxonomy and makes no GitHub calls; `--merge-into-full` also accepts `--prune-removed <inventory>` to drop unstarred repos from the full ledger
+- `scripts/reclassify_bucket.py`: apply an adopted bucket split — takes a `{repo: [new lists]}` mapping, reclassifies those repos through the same validation and snapshot-and-merge path as `write_classification.py --merge-into-full`
+- `scripts/init_taxonomy.py`: copy the bundled taxonomy template to `<workspace>/taxonomy.yaml` (refuses to overwrite an existing workspace copy)
 - `scripts/audit_cloud_drift.py`: read live GitHub list memberships and report drift from a local ledger before writeback
 - `scripts/apply_user_lists.py`: plan and optionally apply GitHub user list changes; `--retry N` retries transient network errors (timeout/TLS/EOF) per mutation
 
@@ -228,5 +231,6 @@ See the Overview pointers above for when each file is reached; this is the index
 - `references/workflow.md`
 - `references/taxonomy-rubric.md`
 - `references/taxonomy-template.yaml`
+- `references/batch-classification-prompt-template.md`
 - `references/classification-ledger.schema.json`
 - `references/github-graphql-notes.md`

@@ -1435,3 +1435,160 @@ def test_write_classification_carries_record_primary_function(tmp_path):
         tmp_path / "ledger2.json",
     )
     assert ledger2[0]["primaryFunction"] == "terminal"
+
+
+
+
+def test_reclassify_bucket_merges_mapping_into_full_ledger(tmp_path, monkeypatch):
+    reclassify = load_module(
+        SKILL_DIR / "scripts" / "reclassify_bucket.py", "reclassify_bucket_test"
+    )
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_reclassify_test")
+    taxonomy = apply_lists.load_taxonomy(TAXONOMY_PATH)
+
+    meta_dir = tmp_path / "star-readmes" / "meta"
+    meta_dir.mkdir(parents=True)
+    for name in ("owner/repo-a", "owner/repo-b"):
+        meta_dir.joinpath(name.replace("/", "__") + ".json").write_text(
+            json.dumps(
+                {
+                    "nameWithOwner": name,
+                    "description": f"{name} desc",
+                    "readmeStatus": "ok",
+                    "finalLists": ["agent-tools"],
+                }
+            ),
+            encoding="utf-8",
+        )
+    full = tmp_path / "complete-ledger.json"
+    full.write_text(
+        json.dumps(
+            [
+                {
+                    "nameWithOwner": "owner/repo-a",
+                    "finalLists": ["agent-tools"],
+                    "readmePath": "star-readmes/raw/owner__repo-a.md",
+                },
+                {
+                    "nameWithOwner": "owner/repo-b",
+                    "finalLists": ["agent-tools"],
+                    "readmePath": "star-readmes/raw/owner__repo-b.md",
+                },
+                {
+                    "nameWithOwner": "owner/repo-c",
+                    "finalLists": ["terminal"],
+                    "readmePath": "star-readmes/raw/owner__repo-c.md",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    mapping = tmp_path / "reclassify-mapping.json"
+    mapping.write_text(
+        json.dumps(
+            {
+                "owner/repo-a": ["dev-tools"],
+                "owner/repo-b": ["dev-tools"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "reclassify_bucket.py",
+            "--ledger",
+            str(full),
+            "--mapping",
+            str(mapping),
+            "--out-dir",
+            str(tmp_path),
+        ],
+    )
+    reclassify.main()
+
+    merged = json.loads(full.read_text(encoding="utf-8"))
+    by_name = {item["nameWithOwner"]: item for item in merged}
+    assert by_name["owner/repo-a"]["finalLists"] == ["dev-tools"]
+    assert by_name["owner/repo-b"]["finalLists"] == ["dev-tools"]
+    # untouched repo keeps its list
+    assert by_name["owner/repo-c"]["finalLists"] == ["terminal"]
+    # snapshot was taken next to the full ledger
+    snapshots = list(tmp_path.glob("complete-ledger.before-*.json"))
+    assert len(snapshots) == 1
+    # meta files reflect the new lists
+    meta_a = json.loads(
+        meta_dir.joinpath("owner__repo-a.json").read_text(encoding="utf-8")
+    )
+    assert meta_a["finalLists"] == ["dev-tools"]
+
+
+def test_reclassify_bucket_rejects_unknown_list(tmp_path, monkeypatch):
+    reclassify = load_module(
+        SKILL_DIR / "scripts" / "reclassify_bucket.py", "reclassify_bucket_unknown_test"
+    )
+    meta_dir = tmp_path / "star-readmes" / "meta"
+    meta_dir.mkdir(parents=True)
+    meta_dir.joinpath("owner__repo-a.json").write_text(
+        json.dumps({"nameWithOwner": "owner/repo-a", "description": "D"}),
+        encoding="utf-8",
+    )
+    full = tmp_path / "complete-ledger.json"
+    full.write_text(
+        json.dumps(
+            [
+                {
+                    "nameWithOwner": "owner/repo-a",
+                    "finalLists": ["agent-tools"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    mapping = tmp_path / "mapping.json"
+    mapping.write_text(
+        json.dumps({"owner/repo-a": ["not-a-list"]}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "reclassify_bucket.py",
+            "--ledger",
+            str(full),
+            "--mapping",
+            str(mapping),
+            "--out-dir",
+            str(tmp_path),
+        ],
+    )
+    with pytest.raises(ValueError, match="Unknown list names"):
+        reclassify.main()
+
+
+def test_init_taxonomy_copies_template_and_refuses_overwrite(tmp_path, monkeypatch):
+    init_taxonomy = load_module(
+        SKILL_DIR / "scripts" / "init_taxonomy.py", "init_taxonomy_test"
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "init_taxonomy.py",
+            "--out-dir",
+            str(tmp_path),
+        ],
+    )
+    init_taxonomy.main()
+    target = tmp_path / "taxonomy.yaml"
+    assert target.exists()
+    apply_lists = load_module(APPLY_SCRIPT, "apply_lists_init_test")
+    taxonomy = apply_lists.load_taxonomy(target)
+    assert len(taxonomy["names"]) == len(apply_lists.load_taxonomy(TAXONOMY_PATH)["names"])
+
+    # second run leaves the file untouched
+    first_bytes = target.read_bytes()
+    init_taxonomy.main()
+    assert target.read_bytes() == first_bytes
